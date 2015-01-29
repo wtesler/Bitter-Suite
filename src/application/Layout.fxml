@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<Pane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.LayoutController">
+	<children>
+		<LineChart fx:id="lc_chart" animated="false" createSymbols="false" layoutX="13.0" layoutY="13.0" prefHeight="425.0" prefWidth="625.0" title="Coinbase Exchange Monitor">
+			<xAxis>
+				<NumberAxis autoRanging="false" forceZeroInRange="false" lowerBound="0" side="BOTTOM" tickLabelsVisible="false" upperBound="500" />
+			</xAxis>
+			<yAxis>
+				<NumberAxis forceZeroInRange="false" side="LEFT" />
+			</yAxis>
+		</LineChart>
+	</children>
+</Pane>
