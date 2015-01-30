@@ -1,3 +1,3 @@
-Desktop app for the Bittersweet Project.
+BitterSuite - Coinbase interface
 
-Has dependencies on SimpleJson, Jetty.
+Has dependencies on SimpleJson, slf4j, and Jetty (included in libs)
