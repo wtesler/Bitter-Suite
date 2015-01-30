@@ -2,6 +2,7 @@ package application;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -25,12 +26,22 @@ public class CoinbaseClient {
     WebSocketClient client;
     Session session;
 
-    // Defined inside this class are a set of callbacks that the main thread overrides.
-    // Usually it is the case that this class is extended.
-    WebSocketAdapter listener;
+    private ArrayList<WebSocketAdapter> listeners = new ArrayList<>();
 
-    public CoinbaseClient(WebSocketAdapter listener) {
-        this.listener = listener;
+    public CoinbaseClient() {
+    }
+
+    void addListener(WebSocketAdapter listener) {
+        this.listeners.add(listener);
+    }
+
+    void removeListener(WebSocketAdapter listener) {
+        for (WebSocketAdapter socketListener : listeners) {
+            if (socketListener == listener) {
+                listeners.remove(socketListener);
+                break;
+            }
+        }
     }
 
     public void start() {
@@ -55,10 +66,12 @@ public class CoinbaseClient {
                 return;
             }
 
+            SocketListener mainListener = new SocketListener();
+
             // Trys to connect.
             // Future.class here lets us treat the connect() as an asynchronous
             // receive (IRecv).
-            Future<Session> fSession = client.connect(listener, uri);
+            Future<Session> fSession = client.connect(mainListener, uri);
 
             // Maybe do something here...
 
@@ -85,6 +98,40 @@ public class CoinbaseClient {
         } catch (Exception e) {
             // XXX Auto-generated catch block
             e.printStackTrace();
+        }
+    }
+
+    private class SocketListener extends WebSocketAdapter {
+        @Override
+        public void onWebSocketConnect(Session sess) {
+            super.onWebSocketConnect(sess);
+            for (WebSocketAdapter listener : listeners) {
+                listener.onWebSocketConnect(sess);
+            }
+        }
+
+        @Override
+        public void onWebSocketText(String message) {
+            super.onWebSocketText(message);
+            for (WebSocketAdapter listener : listeners) {
+                listener.onWebSocketText(message);
+            }
+        }
+
+        @Override
+        public void onWebSocketClose(int statusCode, String reason) {
+            super.onWebSocketClose(statusCode, reason);
+            for (WebSocketAdapter listener : listeners) {
+                listener.onWebSocketClose(statusCode, reason);
+            }
+        }
+
+        @Override
+        public void onWebSocketError(Throwable cause) {
+            super.onWebSocketError(cause);
+            for (WebSocketAdapter listener : listeners) {
+                listener.onWebSocketError(cause);
+            }
         }
     }
 }

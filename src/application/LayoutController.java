@@ -22,8 +22,6 @@ public class LayoutController {
     LineChart.Series<Number, Number> buySeries;
     LineChart.Series<Number, Number> sellSeries;
 
-    CoinbaseClient client;
-
     // Stores the value of the last match price recorded.
     private double matchPrice = 0;
 
@@ -33,26 +31,6 @@ public class LayoutController {
     // Stores the value of the last sell request recorded.
     private double sellPrice = 0;
 
-    private final static int MAX_DATA_SIZE = 500;
-
-    // Coinbase API Metrics.
-    private final static String MATCH_PRICE = "Match Price";
-    private final static String RECEIVED_BUY = "Buy Request";
-    private final static String RECEIVED_SELL = "Sell Request";
-
-    // Coinbase API Message types.
-    private final static String MATCH = "match";
-    private final static String ERROR = "error";
-    private final static String RECEIVED = "received";
-    private final static String BUY = "buy";
-
-    // Coinbase API Message keys.
-    private final static String SEQUENCE = "sequence";
-    private final static String MESSAGE = "message";
-    private final static String PRICE = "price";
-    private final static String TYPE = "type";
-    private final static String SIDE = "side";
-
     public void initialize() {
 
         // Our X Axis
@@ -60,120 +38,125 @@ public class LayoutController {
 
         // The line representing buy requests.
         buySeries = new LineChart.Series<Number, Number>();
-        buySeries.setName(RECEIVED_BUY);
+        buySeries.setName(Constants.RECEIVED_BUY);
         lc_chart.getData().add(buySeries);
 
         // The line representing sell requests.
         sellSeries = new LineChart.Series<Number, Number>();
-        sellSeries.setName(RECEIVED_SELL);
+        sellSeries.setName(Constants.RECEIVED_SELL);
         lc_chart.getData().add(sellSeries);
 
         // The line representing our match price.
         matchSeries = new LineChart.Series<Number, Number>();
-        matchSeries.setName(MATCH_PRICE);
+        matchSeries.setName(Constants.MATCH_PRICE);
         lc_chart.getData().add(matchSeries);
 
         // Aesthetic preference.
         lc_chart.setCreateSymbols(false);
-
-        // Create the CoinbaseClient. Receiving updates from the listener.
-        client = new CoinbaseClient(listener);
-
-        client.start();
     }
 
-    public void stop() {
-        client.stop();
-    }
+    public WebSocketAdapter getListener() {
+        return new WebSocketAdapter() {
 
-    WebSocketAdapter listener = new WebSocketAdapter() {
+            @Override
+            public void onWebSocketConnect(Session sess) {
+                super.onWebSocketConnect(sess);
+                System.out.println("Socket Connected: " + sess);
+            }
 
-        @Override
-        public void onWebSocketConnect(Session sess) {
-            super.onWebSocketConnect(sess);
-            System.out.println("Socket Connected: " + sess);
-        }
+            @Override
+            public void onWebSocketText(String message) {
+                super.onWebSocketText(message);
 
-        @Override
-        public void onWebSocketText(String message) {
-            super.onWebSocketText(message);
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
+                JSONObject json = new JSONObject(message);
+                // Parse the message that we've just received from Coinbase.
+                String type = json.getString(Constants.TYPE);
 
-                    // Parse the message that we've just received from Coinbase.
-                    JSONObject json = new JSONObject(message);
-                    String type = json.getString(TYPE);
+                // Base case: Coinbase sent us an error.
+                if (type.equals(Constants.ERROR)) {
+                    System.err.println("Coinbase sent an error: "
+                            + json.getString(Constants.MESSAGE));
+                    return;
+                }
 
-                    // Base case: Coinbase sent us an error.
-                    if (type.equals(ERROR)) {
-                        System.err.println("Coinbase sent an error: " + json.getString(MESSAGE));
-                        return;
-                    }
+                // Parameters
+                long sequence = json.getLong(Constants.SEQUENCE);
+                double price = json.getDouble(Constants.PRICE);
+                String side = json.getString(Constants.SIDE);
 
-                    // Parameters
-                    long sequence = json.getLong(SEQUENCE);
-                    double price = json.getDouble(PRICE);
-                    String side = json.getString(SIDE);
+                // Notify the agent about the new information.
 
-                    // Update the chart depending on the type of message
-                    // received.
-                    if (type.equals(MATCH)) {
-                        // Update the match price.
-                        matchPrice = price;
-                    } else if (type.equals(RECEIVED)) {
-                        if (BUY.equals(side)) {
-                            buyPrice = price;
-                            if (buyPrice != 0) {
-                                // Update the buy price.
-                                buySeries.getData().add(
-                                        new LineChart.Data<Number, Number>(sequence, buyPrice));
-                            }
-                        } else { // SELL
-                            sellPrice = price;
-                            if (sellPrice != 0) {
-                                // Update the sell price.
-                                sellSeries.getData().add(
-                                        new LineChart.Data<Number, Number>(sequence, sellPrice));
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        // Update the chart depending on the type of message
+                        // received.
+                        if (type.equals(Constants.MATCH)) {
+                            // Update the match price.
+                            matchPrice = price;
+                        } else if (type.equals(Constants.RECEIVED)) {
+
+                            if (Constants.BUY.equals(side)) {
+                                buyPrice = price;
+                                if (buyPrice != 0) {
+                                    // Update the buy price.
+                                    buySeries.getData().add(
+                                            new LineChart.Data<Number, Number>(sequence, buyPrice));
+                                }
+                            } else if (Constants.SELL.equals(side)) { // SELL
+                                sellPrice = price;
+                                if (sellPrice != 0) {
+                                    // Update the sell price.
+                                    sellSeries.getData()
+                                            .add(new LineChart.Data<Number, Number>(sequence,
+                                                    sellPrice));
+                                }
+                            } else {
+                                System.err.println("Could not recognize side: " + side);
                             }
                         }
-                    }
 
-                    // Always update the matchPrice (if not 0)
-                    if (matchPrice != 0) {
-                        matchSeries.getData().add(
-                                new LineChart.Data<Number, Number>(sequence, matchPrice));
-                    }
+                        // Always update the matchPrice (if not 0)
+                        if (matchPrice != 0) {
+                            matchSeries.getData().add(
+                                    new LineChart.Data<Number, Number>(sequence, matchPrice));
+                        }
 
-                    // remove points to keep us at no more than MAX_DATA_POINTS
-                    if (matchSeries.getData().size() > MAX_DATA_SIZE) {
-                        matchSeries.getData().remove(0,
-                                matchSeries.getData().size() - MAX_DATA_SIZE);
-                    }
-                    if (buySeries.getData().size() > MAX_DATA_SIZE) {
-                        buySeries.getData().remove(0, buySeries.getData().size() - MAX_DATA_SIZE);
-                    }
-                    if (sellSeries.getData().size() > MAX_DATA_SIZE) {
-                        sellSeries.getData().remove(0, sellSeries.getData().size() - MAX_DATA_SIZE);
-                    }
+                        // remove points to keep us at no more than
+                        // MAX_DATA_POINTS
+                        if (matchSeries.getData().size() > Constants.MAX_DATA_SIZE) {
+                            matchSeries.getData().remove(0,
+                                    matchSeries.getData().size() - Constants.MAX_DATA_SIZE);
+                        }
+                        if (buySeries.getData().size() > Constants.MAX_DATA_SIZE) {
+                            buySeries.getData().remove(0,
+                                    buySeries.getData().size() - Constants.MAX_DATA_SIZE);
+                        }
+                        if (sellSeries.getData().size() > Constants.MAX_DATA_SIZE) {
+                            sellSeries.getData().remove(0,
+                                    sellSeries.getData().size() - Constants.MAX_DATA_SIZE);
+                        }
 
-                    // update x bounds.
-                    xAxis.setLowerBound(sequence - MAX_DATA_SIZE);
-                    xAxis.setUpperBound(sequence - 1);
-                }
-            });
-        }
+                        // update x bounds.
+                        xAxis.setLowerBound(sequence - Constants.MAX_DATA_SIZE);
+                        xAxis.setUpperBound(sequence - 1);
+                    }
+                });
+            }
 
-        @Override
-        public void onWebSocketClose(int statusCode, String reason) {
-            super.onWebSocketClose(statusCode, reason);
-            System.out.println("Socket Closed: [" + statusCode + "] " + reason);
-        }
+            @Override
+            public void onWebSocketClose(int statusCode, String reason) {
+                super.onWebSocketClose(statusCode, reason);
+                System.out.println("Socket Closed: [" + statusCode + "] " + reason);
+            }
 
-        @Override
-        public void onWebSocketError(Throwable cause) {
-            super.onWebSocketError(cause);
-            cause.printStackTrace(System.err);
-        }
-    };
+            @Override
+            public void onWebSocketError(Throwable cause) {
+                super.onWebSocketError(cause);
+                cause.printStackTrace(System.err);
+            }
+        };
+    }
+
 }
