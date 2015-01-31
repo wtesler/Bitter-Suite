@@ -1,4 +1,4 @@
-package application;
+package agents;
 
 import java.util.LinkedList;
 

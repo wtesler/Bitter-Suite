@@ -1,4 +1,4 @@
-package application;
+package test;
 
 import static org.junit.Assert.*;
 
@@ -7,6 +7,11 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.junit.Test;
+
+import agents.PeerPressureAgent;
+import coinbase.CoinbaseClient;
+import coinbase.Constants;
+import coinbase.ResponseDetail;
 
 public class Tests {
 

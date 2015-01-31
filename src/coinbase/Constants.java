@@ -1,4 +1,4 @@
-package application;
+package coinbase;
 
 public class Constants {
 

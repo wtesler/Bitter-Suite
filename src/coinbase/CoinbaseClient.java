@@ -1,4 +1,4 @@
-package application;
+package coinbase;
 
 import java.net.URI;
 import java.text.DateFormat;
@@ -34,7 +34,7 @@ public class CoinbaseClient {
         socketClient = new WebSocketClient(sslContextFactory1);
     }
 
-    void addListener(WebSocketAdapter listener) {
+    public void addListener(WebSocketAdapter listener) {
         this.listeners.add(listener);
     }
 
@@ -88,8 +88,9 @@ public class CoinbaseClient {
      *            an ISO8601 time indicating the last data we are interested in.
      * @param granularity
      *            how often we want to sample the data (in seconds)
+     * @return A json formatted string containing the retrieved data.
      */
-    public static void getHistoricalData(Date startDate, Date endDate, int granularity)
+    public static String getHistoricalData(Date startDate, Date endDate, int granularity)
             throws Exception {
 
         // Low Security needed
@@ -113,13 +114,16 @@ public class CoinbaseClient {
         // Issue a get request
         ContentResponse res = httpClient.GET(builder.toString());
 
-        // Show the results
-        System.out.println(res.getContentAsString());
-
         httpClient.stop();
+
+        return res.getContentAsString();
     }
 
-    public static void getOrderbook(ResponseDetail level) throws Exception {
+    /**
+     * @param level a ResponseDetail representing how much data you want back.
+     * @return a json formatted String representing the retrieved data.
+     */
+    public static String getOrderbook(ResponseDetail level) throws Exception {
 
         // Low Security needed
         SslContextFactory sslContextFactory2 = new SslContextFactory(true);
@@ -136,10 +140,9 @@ public class CoinbaseClient {
         // Issue a get request
         ContentResponse res = httpClient.GET(builder.toString());
 
-        // Show the results
-        System.out.println(res.getContentAsString());
-
         httpClient.stop();
+
+        return res.getContentAsString();
     }
 
     /**

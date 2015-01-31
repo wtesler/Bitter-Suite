@@ -1,4 +1,4 @@
-package application;
+package coinbase;
 
 /**
  * Used to indicate how much level of detail we want when querying Coinbase's

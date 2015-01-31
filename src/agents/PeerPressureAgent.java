@@ -1,8 +1,10 @@
-package application;
+package agents;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.json.JSONObject;
+
+import coinbase.Constants;
 
 public class PeerPressureAgent extends BaseAgent {
 

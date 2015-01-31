@@ -1,8 +1,10 @@
-package application;
+package gui;
 
 import java.net.URI;
 import java.net.URL;
 
+import coinbase.CoinbaseClient;
+import coinbase.Constants;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -11,7 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-public class Main extends Application {
+public class GuiMain extends Application {
 
     private LayoutController controller;
 

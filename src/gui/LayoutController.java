@@ -1,4 +1,4 @@
-package application;
+package gui;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -9,6 +9,8 @@ import javafx.scene.layout.Pane;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.json.JSONObject;
+
+import coinbase.Constants;
 
 public class LayoutController {
     @FXML
