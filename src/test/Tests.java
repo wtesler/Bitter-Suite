@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import agents.PeerPressureAgent;
 import coinbase.CoinbaseClient;
-import coinbase.Constants;
+import coinbase.Coinbase;
 import coinbase.ResponseDetail;
 
 public class Tests {
@@ -54,7 +54,7 @@ public class Tests {
         PeerPressureAgent agent = new PeerPressureAgent(500, 4);
         client.addListener(agent.getListener());
 
-        URI uri = URI.create(Constants.COINBASE_SOCKET_URL);
+        URI uri = URI.create(Coinbase.COINBASE_SOCKET_URL);
         try {
             client.openWebSocket(uri);
             client.closeSocket();

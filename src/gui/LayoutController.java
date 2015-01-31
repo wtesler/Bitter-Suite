@@ -10,7 +10,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.json.JSONObject;
 
-import coinbase.Constants;
+import coinbase.Coinbase;
 
 public class LayoutController {
     @FXML
@@ -40,17 +40,17 @@ public class LayoutController {
 
         // The line representing buy requests.
         buySeries = new LineChart.Series<Number, Number>();
-        buySeries.setName(Constants.RECEIVED_BUY);
+        buySeries.setName(Coinbase.RECEIVED_BUY);
         lc_chart.getData().add(buySeries);
 
         // The line representing sell requests.
         sellSeries = new LineChart.Series<Number, Number>();
-        sellSeries.setName(Constants.RECEIVED_SELL);
+        sellSeries.setName(Coinbase.RECEIVED_SELL);
         lc_chart.getData().add(sellSeries);
 
         // The line representing our match price.
         matchSeries = new LineChart.Series<Number, Number>();
-        matchSeries.setName(Constants.MATCH_PRICE);
+        matchSeries.setName(Coinbase.MATCH_PRICE);
         lc_chart.getData().add(matchSeries);
 
         // Aesthetic preference.
@@ -72,21 +72,19 @@ public class LayoutController {
 
                 JSONObject json = new JSONObject(message);
                 // Parse the message that we've just received from Coinbase.
-                String type = json.getString(Constants.TYPE);
+                String type = json.getString(Coinbase.TYPE);
 
                 // Base case: Coinbase sent us an error.
-                if (type.equals(Constants.ERROR)) {
+                if (type.equals(Coinbase.ERROR)) {
                     System.err.println("Coinbase sent an error: "
-                            + json.getString(Constants.MESSAGE));
+                            + json.getString(Coinbase.MESSAGE));
                     return;
                 }
 
                 // Parameters
-                long sequence = json.getLong(Constants.SEQUENCE);
-                double price = json.getDouble(Constants.PRICE);
-                String side = json.getString(Constants.SIDE);
-
-                // Notify the agent about the new information.
+                long sequence = json.getLong(Coinbase.SEQUENCE);
+                double price = json.getDouble(Coinbase.PRICE);
+                String side = json.getString(Coinbase.SIDE);
 
                 Platform.runLater(new Runnable() {
                     @Override
@@ -94,19 +92,19 @@ public class LayoutController {
 
                         // Update the chart depending on the type of message
                         // received.
-                        if (type.equals(Constants.MATCH)) {
+                        if (type.equals(Coinbase.MATCH)) {
                             // Update the match price.
                             matchPrice = price;
-                        } else if (type.equals(Constants.RECEIVED)) {
+                        } else if (type.equals(Coinbase.RECEIVED)) {
 
-                            if (Constants.BUY.equals(side)) {
+                            if (Coinbase.BUY.equals(side)) {
                                 buyPrice = price;
                                 if (buyPrice != 0) {
                                     // Update the buy price.
                                     buySeries.getData().add(
                                             new LineChart.Data<Number, Number>(sequence, buyPrice));
                                 }
-                            } else if (Constants.SELL.equals(side)) { // SELL
+                            } else if (Coinbase.SELL.equals(side)) { // SELL
                                 sellPrice = price;
                                 if (sellPrice != 0) {
                                     // Update the sell price.
@@ -127,21 +125,21 @@ public class LayoutController {
 
                         // remove points to keep us at no more than
                         // MAX_DATA_POINTS
-                        if (matchSeries.getData().size() > Constants.MAX_DATA_SIZE) {
+                        if (matchSeries.getData().size() > Coinbase.MAX_DATA_SIZE) {
                             matchSeries.getData().remove(0,
-                                    matchSeries.getData().size() - Constants.MAX_DATA_SIZE);
+                                    matchSeries.getData().size() - Coinbase.MAX_DATA_SIZE);
                         }
-                        if (buySeries.getData().size() > Constants.MAX_DATA_SIZE) {
+                        if (buySeries.getData().size() > Coinbase.MAX_DATA_SIZE) {
                             buySeries.getData().remove(0,
-                                    buySeries.getData().size() - Constants.MAX_DATA_SIZE);
+                                    buySeries.getData().size() - Coinbase.MAX_DATA_SIZE);
                         }
-                        if (sellSeries.getData().size() > Constants.MAX_DATA_SIZE) {
+                        if (sellSeries.getData().size() > Coinbase.MAX_DATA_SIZE) {
                             sellSeries.getData().remove(0,
-                                    sellSeries.getData().size() - Constants.MAX_DATA_SIZE);
+                                    sellSeries.getData().size() - Coinbase.MAX_DATA_SIZE);
                         }
 
                         // update x bounds.
-                        xAxis.setLowerBound(sequence - Constants.MAX_DATA_SIZE);
+                        xAxis.setLowerBound(sequence - Coinbase.MAX_DATA_SIZE);
                         xAxis.setUpperBound(sequence - 1);
                     }
                 });

@@ -4,7 +4,7 @@ import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.json.JSONObject;
 
-import coinbase.Constants;
+import coinbase.Coinbase;
 
 public class PeerPressureAgent extends BaseAgent {
 
@@ -31,24 +31,24 @@ public class PeerPressureAgent extends BaseAgent {
                 // THIS HAS ALL THE JUICY INFORMATION YOU COULD WANT.
                 JSONObject json = new JSONObject(message);
 
-                String type = json.getString(Constants.TYPE);
+                String type = json.getString(Coinbase.TYPE);
 
                 // Base case: Coinbase sent us an error.
-                if (type.equals(Constants.ERROR)) {
+                if (type.equals(Coinbase.ERROR)) {
                     System.err.println("Coinbase sent an error: "
-                            + json.getString(Constants.MESSAGE));
+                            + json.getString(Coinbase.MESSAGE));
                     return;
                 }
 
                 // Parameters
-                long sequence = json.getLong(Constants.SEQUENCE);
-                double price = json.getDouble(Constants.PRICE);
-                String side = json.getString(Constants.SIDE);
+                long sequence = json.getLong(Coinbase.SEQUENCE);
+                double price = json.getDouble(Coinbase.PRICE);
+                String side = json.getString(Coinbase.SIDE);
 
                 if (price != 0) {
                     // Update the chart depending on the type of message
                     // received.
-                    if (type.equals(Constants.MATCH)) {
+                    if (type.equals(Coinbase.MATCH)) {
                         if (matches.size() == 0) {
                             double total = myUSD + (price * myBTC);
                             System.out.format(
@@ -60,13 +60,13 @@ public class PeerPressureAgent extends BaseAgent {
                             matches.removeFirst();
                         }
                         makeDecision();
-                    } else if (type.equals(Constants.RECEIVED)) {
-                        if (Constants.BUY.equals(side)) {
+                    } else if (type.equals(Coinbase.RECEIVED)) {
+                        if (Coinbase.BUY.equals(side)) {
                             buys.add(price);
                             if (buys.size() > MEMORY) {
                                 buys.removeFirst();
                             }
-                        } else if (Constants.SELL.equals(side)) {
+                        } else if (Coinbase.SELL.equals(side)) {
                             sells.add(price);
                             if (sells.size() > MEMORY) {
                                 sells.removeFirst();

@@ -4,7 +4,7 @@ import java.net.URI;
 import java.net.URL;
 
 import coinbase.CoinbaseClient;
-import coinbase.Constants;
+import coinbase.Coinbase;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -32,15 +32,6 @@ public class GuiMain extends Application {
             fxmlLoader.setBuilderFactory(new JavaFXBuilderFactory());
             Parent root = (Parent) fxmlLoader.load(location.openStream());
 
-            CoinbaseClient client = new CoinbaseClient();
-
-            // Get a handle on our application's layout controller.
-            controller = ((LayoutController) fxmlLoader.getController());
-            client.addListener(controller.getListener());
-
-            URI uri = URI.create(Constants.COINBASE_SOCKET_URL);
-            client.openWebSocket(uri);
-
             // Create a scene and style it with CSS
             Scene scene = new Scene(root, 650, 450);
             scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
@@ -48,6 +39,14 @@ public class GuiMain extends Application {
             // Reveal the scene to the user.
             primaryStage.setScene(scene);
             primaryStage.show();
+
+            client = new CoinbaseClient();
+            // Get a handle on our application's layout controller.
+            controller = ((LayoutController) fxmlLoader.getController());
+            client.addListener(controller.getListener());
+
+            URI uri = URI.create(Coinbase.COINBASE_SOCKET_URL);
+            client.openWebSocket(uri);
 
         } catch (Exception e) {
             e.printStackTrace();

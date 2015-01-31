@@ -64,8 +64,8 @@ public class CoinbaseClient {
 
         // Construct the subscribe message as defined in the API.
         JSONObject json = new JSONObject();
-        json.put(Constants.TYPE, Constants.SUBSCRIBE);
-        json.put(Constants.PRODUCT_ID, Constants.BITCOIN_USD);
+        json.put(Coinbase.TYPE, Coinbase.SUBSCRIBE);
+        json.put(Coinbase.PRODUCT_ID, Coinbase.BITCOIN_USD);
 
         // Send the subscribe message to the server.
         session.getRemote().sendString(json.toString());
@@ -104,8 +104,8 @@ public class CoinbaseClient {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
         // Build the get request url.
-        StringBuilder builder = new StringBuilder(Constants.COINBASE_API_ENDPOINT);
-        builder.append("/products/" + Constants.BITCOIN_USD + "/candles").append('?');
+        StringBuilder builder = new StringBuilder(Coinbase.COINBASE_API_ENDPOINT);
+        builder.append("/products/" + Coinbase.BITCOIN_USD + "/candles").append('?');
         ;
         builder.append("start=" + df.format(startDate)).append('&');
         builder.append("end=" + df.format(endDate)).append('&');
@@ -120,7 +120,8 @@ public class CoinbaseClient {
     }
 
     /**
-     * @param level a ResponseDetail representing how much data you want back.
+     * @param level
+     *            a ResponseDetail representing how much data you want back.
      * @return a json formatted String representing the retrieved data.
      */
     public static String getOrderbook(ResponseDetail level) throws Exception {
@@ -133,8 +134,8 @@ public class CoinbaseClient {
         httpClient.start();
 
         // Build the get request using the Coinbase API.
-        StringBuilder builder = new StringBuilder(Constants.COINBASE_API_ENDPOINT);
-        builder.append("/products/" + Constants.BITCOIN_USD + "/book").append('?');
+        StringBuilder builder = new StringBuilder(Coinbase.COINBASE_API_ENDPOINT);
+        builder.append("/products/" + Coinbase.BITCOIN_USD + "/book").append('?');
         builder.append("level=" + level.ordinal());
 
         // Issue a get request

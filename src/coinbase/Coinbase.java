@@ -1,6 +1,6 @@
 package coinbase;
 
-public class Constants {
+public class Coinbase {
 
     public final static int MAX_DATA_SIZE = 500;
 
@@ -31,4 +31,6 @@ public class Constants {
     public final static String MESSAGE = "message";
     public final static String PRICE = "price";
     public final static String SIDE = "side";
+    
+    // 
 }
