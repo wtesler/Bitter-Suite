@@ -9,10 +9,6 @@ Coinbase interface by Will Tesler</b>
 
 -See mongo package for code related to our mongo database.
 
--Has dependencies on SimpleJson (https://code.google.com/p/json-simple/downloads/list), Jetty (included in libs).
-
--If Jetty complains about wanting slf4j logging, then add this dependency http://www.slf4j.org/download.html.
-
 Specification:
 
 <b>CoinbaseClient<b/> contains methods for interfacing with the Coinbase API Servers. It has two uses:
