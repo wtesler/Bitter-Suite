@@ -8,6 +8,7 @@ import javafx.scene.layout.Pane;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -62,9 +63,9 @@ public class LayoutController {
         return new WebSocketAdapter() {
 
             @Override
-            public void onWebSocketConnect(Session sess) {
-                super.onWebSocketConnect(sess);
-                System.out.println("Socket Connected: " + sess);
+            public void onWebSocketConnect(Session session) {
+                super.onWebSocketConnect(session);
+                System.out.println("Socket Connected: " + session);
             }
 
             @Override
@@ -157,9 +158,9 @@ public class LayoutController {
             }
 
             @Override
-            public void onWebSocketError(Throwable cause) {
-                super.onWebSocketError(cause);
-                cause.printStackTrace(System.err);
+            public void onWebSocketError(Throwable e) {
+                super.onWebSocketError(e);
+                e.printStackTrace();
             }
         };
     }

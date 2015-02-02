@@ -20,17 +20,18 @@ public class Tests {
         // Calendar start and end dates.
         Calendar cal = Calendar.getInstance();
 
-        cal.set(2015, 0, 23, 0, 0, 0);
+        cal.set(2014, 0, 23, 0, 0, 0);
         Date startDate = cal.getTime();
 
         cal.clear();
 
-        cal.set(2015, 0, 29, 0, 0, 0);
+        cal.set(2016, 0, 29, 0, 0, 0);
         Date endDate = cal.getTime();
 
         try {
-            // Getting match data from Jan 23 - Jan 29
-            CoinbaseClient.getHistoricalData(startDate, endDate, 1000);
+            // Getting match data from 2014 - 2016
+            String response = CoinbaseClient.getHistoricalData(startDate, endDate, 2);
+            System.out.println(response);
         } catch (Exception e) {
             fail(e.getMessage());
         }

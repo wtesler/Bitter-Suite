@@ -6,13 +6,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * Centralizes the debugging process of the app.
- * Use Debug.out and Debug.err to print debug statements to the console.
- * Lets developers selectively choose which classes to debug
- * without needing to alter variables across multiple files.
+ * Centralizes the debugging process of the app. Use Debug.out and Debug.err to
+ * print debug statements to the console. Lets developers selectively choose
+ * which classes to debug without needing to alter variables across multiple
+ * files.
  *
  */
 public class Debug {
+
+    // A universal shut-off switch. Ensures peace of mind when shipping product.
+    private final static boolean QUIET = false;
 
     private static class DebugMap extends HashMap<String, Boolean> {
         public DebugMap() {
@@ -25,21 +28,34 @@ public class Debug {
         }
     }
 
+    // String mappings.
     public final static String IPUTILS = "IPUTILS";
-    public final static String LAN     = "LAN";
-    public final static String MAIN    = "MAIN";
-    public final static String QR      = "QR";
-    public final static String SERVER  = "SERVER";
-    public final static String DEBUG  = "DEBUG";
+    public final static String LAN = "LAN";
+    public final static String MAIN = "MAIN";
+    public final static String QR = "QR";
+    public final static String SERVER = "SERVER";
+    // You CAN debug the debug class.
+    public final static String DEBUG = "DEBUG";
 
+    // final. Represents that the user does not want the logs to be text
+    // aligned.
     private static final int NOT_ALIGNED = -1;
 
-    private static int maxTagLength = -1;
+    // When alignTags() is called, this value changes to represent the text
+    // padding
+    private static int maxTagLength = NOT_ALIGNED;
 
+    // Creates an unmodifiable Debug Map which maps String keys to debug status.
     private static final Map<String, Boolean> tagMap = Collections.unmodifiableMap(new DebugMap());
 
+    /**
+     * Prints a debug message to the console.
+     *
+     * @param tag String mapping
+     * @param msg The text which should be displayed.
+     */
     public static void out(final String tag, final String msg) {
-        if (tagMap.get(tag)) {
+        if (tagMap.get(tag) && !QUIET) {
             String paddedTag = tag;
             if (maxTagLength != NOT_ALIGNED) {
                 paddedTag = padString(tag, maxTagLength);
@@ -48,8 +64,14 @@ public class Debug {
         }
     }
 
+    /**
+     * Prints an error message to the console.
+     *
+     * @param tag String mapping
+     * @param msg the text which should be displayed.
+     */
     public static void err(final String tag, final String msg) {
-        if (tagMap.get(tag)) {
+        if (tagMap.get(tag) && !QUIET) {
             String paddedTag = tag;
             if (maxTagLength != NOT_ALIGNED) {
                 paddedTag = padString(tag, maxTagLength);

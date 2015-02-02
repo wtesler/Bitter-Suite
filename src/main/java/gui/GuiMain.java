@@ -3,8 +3,6 @@ package gui;
 import java.net.URI;
 import java.net.URL;
 
-import coinbase.CoinbaseClient;
-import coinbase.Coinbase;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -12,6 +10,8 @@ import javafx.fxml.JavaFXBuilderFactory;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import coinbase.Coinbase;
+import coinbase.CoinbaseClient;
 
 public class GuiMain extends Application {
 

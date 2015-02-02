@@ -2,6 +2,7 @@ package agents;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
+import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,10 +19,11 @@ public class PeerPressureAgent extends BaseAgent {
 
     @Override
     public WebSocketAdapter getListener() {
+
         return new WebSocketAdapter() {
             @Override
-            public void onWebSocketConnect(Session sess) {
-                super.onWebSocketConnect(sess);
+            public void onWebSocketConnect(Session session) {
+                super.onWebSocketConnect(session);
                 System.out.println("Agent has connected");
             }
 
@@ -87,13 +89,11 @@ public class PeerPressureAgent extends BaseAgent {
             @Override
             public void onWebSocketClose(int statusCode, String reason) {
                 super.onWebSocketClose(statusCode, reason);
-                // CLOSED SOCKET
             }
 
             @Override
-            public void onWebSocketError(Throwable cause) {
-                super.onWebSocketError(cause);
-                // ERROR OCCURRED
+            public void onWebSocketError(Throwable e) {
+                super.onWebSocketError(e);
             }
         };
     }

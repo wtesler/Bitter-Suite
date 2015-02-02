@@ -154,11 +154,14 @@ public class CoinbaseClient {
      * have been added to the CoinbaseClient.
      */
     private class SocketListener extends WebSocketAdapter {
+
+
+
         @Override
-        public void onWebSocketConnect(Session sess) {
-            super.onWebSocketConnect(sess);
+        public void onWebSocketConnect(Session connection) {
+            super.onWebSocketConnect(connection);
             for (WebSocketAdapter listener : listeners) {
-                listener.onWebSocketConnect(sess);
+                listener.onWebSocketConnect(connection);
             }
         }
 
@@ -178,11 +181,13 @@ public class CoinbaseClient {
             }
         }
 
+
+
         @Override
-        public void onWebSocketError(Throwable cause) {
-            super.onWebSocketError(cause);
+        public void onWebSocketError(Throwable error) {
+            super.onWebSocketError(error);
             for (WebSocketAdapter listener : listeners) {
-                listener.onWebSocketError(cause);
+                listener.onWebSocketError(error);
             }
         }
     }
