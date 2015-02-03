@@ -92,12 +92,12 @@ public class Tests {
         double[][] knownPatterns1 = { samePattern, similarPattern };
         double[] knownPriceChanges1 = { 0, 1 };
         double estimate1 =
-                LatentSourceModel.estimatePriceChange(pattern, knownPatterns1, knownPriceChanges1,
+                LatentSourceModel.estimateFuturePrice(pattern, knownPatterns1, knownPriceChanges1,
                         1);
         double[][] knownPatterns2 = { samePattern, diffPattern };
         double[] knownPriceChanges2 = { 0, 1 };
         double estimate2 =
-                LatentSourceModel.estimatePriceChange(pattern, knownPatterns2, knownPriceChanges2,
+                LatentSourceModel.estimateFuturePrice(pattern, knownPatterns2, knownPriceChanges2,
                         1);
 
         if (estimate1 < .4 || estimate1 > .5) {
