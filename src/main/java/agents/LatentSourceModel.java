@@ -7,95 +7,151 @@ public class LatentSourceModel {
     /**
      * @param curPattern
      *            the current pattern we are analyzing.
-     * @param knownPatterns
-     *            all the relevant known patterns we have learnt. Each one
-     *            should be the length of curPattern.
-     * @param knownPriceChanges
+     * @param relevantPatterns
+     *            all the relevant known patterns we have learned through
+     *            k-means clustering. Each one should be the length of
+     *            curPattern.
+     * @param relevantPriceChanges
      *            all the relevant price changes associated with each known
      *            pattern. These values are found by taking the difference in
-     *            price between the last y in the known pattern and the y2 in a
-     *            few seconds after y. Should be the same length as patterns.
+     *            price between the last y at position x-final and x-final +
+     *            nearFuture+-. Should be the same length as patterns.
+     * @param weight
+     *            a learned constant. The higher it becomes, the more we trust
+     *            our model.
      * @return
      */
     public static double estimateFuturePrice(final double[] curPattern,
-            final double[][] knownPatterns, final double[] knownPriceChanges, final double learntC) {
-        double[] similarities = calculateSimilarities(curPattern, knownPatterns, learntC);
+            final double[][] relevantPatterns, final double[] relevantPriceChanges,
+            final double weight) {
+        double[] similarities = calculateSimilarities(curPattern, relevantPatterns, weight);
         double simSum = Arrays.stream(similarities).sum();
         double yHat = 0;
-        for (int i = 0; i < knownPatterns.length; i++) {
+        for (int i = 0; i < relevantPatterns.length; i++) {
             double similarityWeight = similarities[i] / simSum;
-            yHat += similarityWeight * knownPriceChanges[i];
+            yHat += similarityWeight * relevantPriceChanges[i];
         }
         return yHat;
     }
 
     /**
-     * This is part of Shah and Zhang's Equation 7. It returns the similarity
-     * between the current pattern and all of the other known patterns
+     * This is part of Shah and Zhang's Equation 7. It returns the similarities
+     * between the current pattern and all of the other relevant patterns.
+     * Useful in the proceeding operations.
      *
      * @param curPattern
      *            the current pattern we are examining.
-     * @param knownPatterns
+     * @param relevantPatterns
      *            all the relevant known patterns we have learnt. Each one
      *            should be the same length as curPattern.
-     * @param c
-     *            A learnt constant value we use to optimize our prediction.
+     * @param weight
+     *            A learned constant value we use to optimize our prediction.
      * @return A vector of similarity comparisons between curPattern and
      *         knownPatterns.
      */
-    private static double[] calculateSimilarities(final double[] curPattern,
-            final double[][] knownPatterns, final double c) {
-        double[] similarities = new double[knownPatterns.length];
-        for (int i = 0; i < knownPatterns.length; i++) {
-            similarities[i] = Math.exp(c * similarity(curPattern, knownPatterns[i]));
+    public static double[] calculateSimilarities(final double[] curPattern,
+            final double[][] relevantPatterns, final double weight) {
+        /*
+         * This holds an array with similarity values that correspond to
+         * relevant patterns.
+         */
+        double[] similarities = new double[relevantPatterns.length];
+        for (int i = 0; i < relevantPatterns.length; i++) {
+            similarities[i] = Math.exp(weight * similarity(curPattern, relevantPatterns[i]));
         }
         return similarities;
     }
 
     /**
-     * @param vec1
+     * * Note: This is the parallel version of calculateSimilarities. Generally
+     * slower on few cores. <br/>
+     * <br/>
+     * This is part of Shah and Zhang's Equation 7. It returns the similarities
+     * between the current pattern and all of the other relevant patterns.
+     * Useful in the proceeding operations.
+     *
+     * @param curPattern
+     *            the current pattern we are examining.
+     * @param relevantPatterns
+     *            all the relevant known patterns we have learnt. Each one
+     *            should be the same length as curPattern.
+     * @param weight
+     *            A learned constant value we use to optimize our prediction.
+     * @return A vector of similarity comparisons between curPattern and
+     *         knownPatterns.
+     */
+    public static double[] calculateSimilaritiesParallel(final double[] curPattern,
+            final double[][] relevantPatterns, final double weight) {
+        /*
+         * This holds an array with similarity values that correspond to
+         * relevant patterns.
+         */
+        double[] similarities = new double[relevantPatterns.length];
+        Arrays.parallelSetAll(similarities, i -> {
+            return Math.exp(weight * similarity(curPattern, relevantPatterns[i]));
+        });
+        return similarities;
+    }
+
+    /**
+     * @param pattern1
      *            a normalized (mean=0, std=1) vector.
-     * @param vec2
+     * @param pattern2
      *            a normalized (mean=0, std=1) vector.
      * @return a similarity rating from -1 to 1.
      */
-    public static double similarity(final double[] vec1, final double[] vec2) {
+    public static double similarity(final double[] pattern1, final double[] pattern2) {
         double sum = 0;
-        for (int i = 0; i < vec1.length; i++) {
-            sum += vec1[i] * vec2[i];
+        for (int i = 0; i < pattern1.length; i++) {
+            /*
+             * The calculation here is a simple dot product. Very
+             * computationally easy as long as mean=0 and std=1. That is why the
+             * patterns must be normalized with normalizeVector() before being
+             * passed into this function.
+             */
+            sum += pattern1[i] * pattern2[i];
         }
-        double denom = vec1.length - 1;
-        // System.out.println("Similarity is: " + sum / denom);
+        double denom = pattern1.length - 1;
         return sum / denom;
     }
 
-    public static void normalizeVector(double[] vec) {
-        double mean = mean(vec);
-        double std = std(vec, mean);
-        for (int i = 0; i < vec.length; i++) {
-            vec[i] = (vec[i] - mean) / std;
+    /**
+     * Takes any arbitrary pattern and normalizes it in place. Normalize means
+     * the pattern revolves around a mean of 0 and a standard deviation of 1.
+     *
+     * @param pattern
+     *            a sequence of double representing a time-series window.
+     */
+    public static void normalizeVector(double[] pattern) {
+        double mean = Arrays.stream(pattern).average().getAsDouble();
+        double std = std(pattern, mean);
+        for (int i = 0; i < pattern.length; i++) {
+            pattern[i] = (pattern[i] - mean) / std;
         }
     }
 
     /**
-     * @param vector
-     * @return the mean of values in the vector.
+     * Note: This is the parallel version of normalizeVector. This is much
+     * slower when number of cores is small! <br/>
+     * <br/>
+     * Takes any arbitrary pattern and normalizes it in place. Normalize means
+     * the pattern revolves around a mean of 0 and a standard deviation of 1.
+     *
+     * @param pattern
+     *            a sequence of double representing a time-series window.
      */
-    public static double mean(final double[] vector) {
-        return Arrays.stream(vector).average().getAsDouble();
+    public static void normalizeVectorParallel(double[] pattern) {
+        double mean = Arrays.stream(pattern).average().getAsDouble();
+        double std = std(pattern, mean);
+        Arrays.parallelSetAll(pattern, i -> {
+            return (pattern[i] - mean) / std;
+        });
     }
 
-    /**
-     * @param vector
-     * @param mean
-     *            the vector's mean
-     * @return the standard deviation of this vector from the mean.
-     */
-    public static double std(final double[] vector, final double mean) {
-        double std = 0;
-        for (double value : vector) {
-            std += Math.pow(value - mean, 2);
-        }
-        return Math.sqrt(std / (vector.length - 1));
+    public static double std(final double[] pattern, final double mean) {
+        double std =
+                Arrays.stream(pattern).map(p -> Math.pow(p - mean, 2)).reduce(0, (a, b) -> a + b);
+        std = Math.sqrt(std / (pattern.length - 1));
+        return std;
     }
 }

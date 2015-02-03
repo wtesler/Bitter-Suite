@@ -3,6 +3,7 @@ package test;
 import static org.junit.Assert.*;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -70,15 +71,15 @@ public class Tests {
         double[] patternB = { 1, 2, 3, 4, 100 };
         LatentSourceModel.normalizeVector(patternA);
         LatentSourceModel.normalizeVector(patternB);
-        double mean1 = LatentSourceModel.mean(patternA);
-        double mean2 = LatentSourceModel.mean(patternB);
-        assertEquals(mean1, LatentSourceModel.mean(patternB), 0);
+        double mean1 = Arrays.stream(patternA).average().getAsDouble();
+        double mean2 = Arrays.stream(patternB).average().getAsDouble();
+        assertEquals(mean1, mean2, 0);
         assertEquals(LatentSourceModel.std(patternA, mean1),
                 LatentSourceModel.std(patternB, mean2), 0);
     }
 
     @Test
-    public void LatentSourceModel() {
+    public void latentSourceModelEstimations() {
 
         double[] pattern = { 1, 2, 3, 4, 5 };
         double[] samePattern = { 1, 2, 3, 4, 5 };
@@ -105,6 +106,78 @@ public class Tests {
         }
         if (estimate2 > .2) {
             fail("Estimate 2 (Different) of " + estimate2 + " does not seem correct");
+        }
+    }
+
+    @Test
+    public void NormalizeEqualsNormalizeParallel() {
+        double[] patternA = { 1, 21, 29, 4, 6 };
+        double[] patternB = { 1, 21, 29, 4, 6 };
+        LatentSourceModel.normalizeVector(patternA);
+        LatentSourceModel.normalizeVectorParallel(patternB);
+        assertArrayEquals(patternA, patternB, 0);
+
+    }
+
+    @Test
+    public void Normalize_Vs_NormalParallel_StressTest() {
+
+        long time = System.currentTimeMillis();
+
+        // 1 million
+        for (int i = 0; i < 1000000; i++) {
+            // randomly generated pattern
+            double[] pattern = { i, i + i, i / 2, i % 2, i * i };
+            LatentSourceModel.normalizeVector(pattern);
+        }
+        long serialTime = System.currentTimeMillis() - time;
+
+        time = System.currentTimeMillis();
+
+        // 1 million
+        for (int i = 0; i < 1000000; i++) {
+            // randomly generated pattern
+            double[] pattern = { i, i + i, i / 2, i % 2, i * i };
+            LatentSourceModel.normalizeVectorParallel(pattern);
+        }
+        long parallelTime = System.currentTimeMillis() - time;
+
+        if (parallelTime < serialTime) {
+            fail("Time to start using a parallel normalize!");
+        }
+    }
+
+    @Test
+    public void CalculateSimilarities_Vs_CalculateSimilaritiesParallel_StressTest() {
+
+        long time = System.currentTimeMillis();
+
+        // 100 thousand
+        for (int i = 0; i < 100000; i++) {
+            double[] ourPattern = { 5, 11, 1, 23, 27 };
+            // randomly generated pattern
+            double[] patternA = { i, i + i, i / 2, i % 2, i * i };
+            double[] patternB = { i << 1, i ^ 256, i >> 2, i - 2, i + 2 };
+            double[][] relevantPatterns = { patternA, patternB };
+            LatentSourceModel.calculateSimilarities(ourPattern, relevantPatterns, 1);
+        }
+        long serialTime = System.currentTimeMillis() - time;
+
+        time = System.currentTimeMillis();
+
+        // 100 thousand
+        for (int i = 0; i < 100000; i++) {
+            double[] ourPattern = { 5, 11, 1, 23, 27 };
+            // randomly generated pattern
+            double[] patternA = { i, i + i, i / 2, i % 2, i * i };
+            double[] patternB = { i << 1, i ^ 256, i >> 2, i - 2, i + 2 };
+            double[][] relevantPatterns = { patternA, patternB };
+            LatentSourceModel.calculateSimilaritiesParallel(ourPattern, relevantPatterns, 1);
+        }
+        long parallelTime = System.currentTimeMillis() - time;
+
+        if (parallelTime < serialTime) {
+            fail("Time to start using a parallel calculateSimilarities!");
         }
     }
 }
