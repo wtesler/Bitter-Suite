@@ -8,7 +8,6 @@ import javafx.scene.layout.Pane;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.json.JSONException;
 import org.json.JSONObject;
 

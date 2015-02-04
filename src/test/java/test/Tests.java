@@ -53,7 +53,7 @@ public class Tests {
         CoinbaseClient client = new CoinbaseClient();
 
         // Add a new agent to the client.
-        PeerPressureAgent agent = new PeerPressureAgent(500, 4);
+        PeerPressureAgent agent = new PeerPressureAgent(500, 4, 2048);
         client.addListener(agent.getListener());
 
         URI uri = URI.create(Coinbase.COINBASE_SOCKET_URL);
@@ -110,7 +110,7 @@ public class Tests {
     }
 
     @Test
-    public void NormalizeEqualsNormalizeParallel() {
+    public void NormalizeMethodsProduceSameResult() {
         double[] patternA = { 1, 21, 29, 4, 6 };
         double[] patternB = { 1, 21, 29, 4, 6 };
         LatentSourceModel.normalizeVector(patternA);
@@ -120,12 +120,20 @@ public class Tests {
     }
 
     @Test
-    public void Normalize_Vs_NormalParallel_StressTest() {
+    public void Normalize_SerialVsParallel_StressTest() {
+
+        // Warm up the JVM the old fashion way with some Discrete Log work.
+        for (int i = 0; i < 10000; i++) {
+            Math.log(i);
+        }
+
+        // Get a fresh slate.
+        System.gc();
 
         long time = System.currentTimeMillis();
 
-        // 1 million
-        for (int i = 0; i < 1000000; i++) {
+        // 100 thousand
+        for (int i = 0; i < 100000; i++) {
             // randomly generated pattern
             double[] pattern = { i, i + i, i / 2, i % 2, i * i };
             LatentSourceModel.normalizeVector(pattern);
@@ -134,21 +142,30 @@ public class Tests {
 
         time = System.currentTimeMillis();
 
-        // 1 million
-        for (int i = 0; i < 1000000; i++) {
+        // 100 thousand
+        for (int i = 0; i < 100000; i++) {
             // randomly generated pattern
             double[] pattern = { i, i + i, i / 2, i % 2, i * i };
             LatentSourceModel.normalizeVectorParallel(pattern);
         }
         long parallelTime = System.currentTimeMillis() - time;
 
+        // System.out.println(serialTime + " : " + parallelTime);
         if (parallelTime < serialTime) {
             fail("Time to start using a parallel normalize!");
         }
     }
 
     @Test
-    public void CalculateSimilarities_Vs_CalculateSimilaritiesParallel_StressTest() {
+    public void Similarities_Serial_Vs_Parallel_StressTest() {
+
+        // Warm up the JVM the old fashion way with some Discrete Log work.
+        for (int i = 0; i < 10000; i++) {
+            Math.log(i);
+        }
+
+        // Get a fresh slate.
+        System.gc();
 
         long time = System.currentTimeMillis();
 
@@ -159,7 +176,16 @@ public class Tests {
             double[] patternA = { i, i + i, i / 2, i % 2, i * i };
             double[] patternB = { i << 1, i ^ 256, i >> 2, i - 2, i + 2 };
             double[][] relevantPatterns = { patternA, patternB };
-            LatentSourceModel.calculateSimilarities(ourPattern, relevantPatterns, 1);
+            /*
+             * Calculate Similarities.
+             */
+            final int weight = 1;
+            double[] similarities = new double[relevantPatterns.length];
+            for (int j = 0; j < relevantPatterns.length; j++) {
+                similarities[j] =
+                        Math.exp(weight
+                                * LatentSourceModel.variance(ourPattern, relevantPatterns[j]));
+            }
         }
         long serialTime = System.currentTimeMillis() - time;
 

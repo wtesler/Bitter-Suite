@@ -24,42 +24,30 @@ public class LatentSourceModel {
     public static double estimateFuturePrice(final double[] curPattern,
             final double[][] relevantPatterns, final double[] relevantPriceChanges,
             final double weight) {
-        double[] similarities = calculateSimilarities(curPattern, relevantPatterns, weight);
-        double simSum = Arrays.stream(similarities).sum();
-        double yHat = 0;
-        for (int i = 0; i < relevantPatterns.length; i++) {
-            double similarityWeight = similarities[i] / simSum;
-            yHat += similarityWeight * relevantPriceChanges[i];
-        }
-        return yHat;
-    }
 
-    /**
-     * This is part of Shah and Zhang's Equation 7. It returns the similarities
-     * between the current pattern and all of the other relevant patterns.
-     * Useful in the proceeding operations.
-     *
-     * @param curPattern
-     *            the current pattern we are examining.
-     * @param relevantPatterns
-     *            all the relevant known patterns we have learnt. Each one
-     *            should be the same length as curPattern.
-     * @param weight
-     *            A learned constant value we use to optimize our prediction.
-     * @return A vector of similarity comparisons between curPattern and
-     *         knownPatterns.
-     */
-    public static double[] calculateSimilarities(final double[] curPattern,
-            final double[][] relevantPatterns, final double weight) {
         /*
-         * This holds an array with similarity values that correspond to
-         * relevant patterns.
+         *  Calculate Similarities as described in Shah and Zhang's similarity definition
          */
         double[] similarities = new double[relevantPatterns.length];
         for (int i = 0; i < relevantPatterns.length; i++) {
-            similarities[i] = Math.exp(weight * similarity(curPattern, relevantPatterns[i]));
+            similarities[i] = Math.exp(weight * variance(curPattern, relevantPatterns[i]));
         }
-        return similarities;
+
+        /*
+         * Used for normalizing the similarities that we receive.
+         */
+        double similarityTotal = Arrays.stream(similarities).sum();
+
+        /*
+         * Each relevant pattern contributes to the estimate.
+         * Similar patterns hold stronger sway in the decision.
+         */
+        double estimate = 0;
+        for (int i = 0; i < relevantPatterns.length; i++) {
+            double similarity = similarities[i] / similarityTotal;
+            estimate += similarity * relevantPriceChanges[i];
+        }
+        return estimate;
     }
 
     /**
@@ -88,19 +76,22 @@ public class LatentSourceModel {
          */
         double[] similarities = new double[relevantPatterns.length];
         Arrays.parallelSetAll(similarities, i -> {
-            return Math.exp(weight * similarity(curPattern, relevantPatterns[i]));
+            return Math.exp(weight * variance(curPattern, relevantPatterns[i]));
         });
         return similarities;
     }
 
     /**
+     * The equation for <b>variance</b> Since both patterns are assumed to be
+     * normalized, we do not need to include mean in the calculations.
+     *
      * @param pattern1
      *            a normalized (mean=0, std=1) vector.
      * @param pattern2
      *            a normalized (mean=0, std=1) vector.
-     * @return a similarity rating from -1 to 1.
+     * @return a similarity rating from <b>-1 to 1.</b>
      */
-    public static double similarity(final double[] pattern1, final double[] pattern2) {
+    public static double variance(final double[] pattern1, final double[] pattern2) {
         double sum = 0;
         for (int i = 0; i < pattern1.length; i++) {
             /*
@@ -111,7 +102,11 @@ public class LatentSourceModel {
              */
             sum += pattern1[i] * pattern2[i];
         }
+
+        // Why minus 1?
         double denom = pattern1.length - 1;
+
+        // return the variance
         return sum / denom;
     }
 

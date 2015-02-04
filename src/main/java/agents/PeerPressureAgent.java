@@ -2,7 +2,6 @@ package agents;
 
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
-import org.eclipse.jetty.websocket.api.WebSocketException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -11,10 +10,9 @@ import coinbase.Coinbase;
 public class PeerPressureAgent extends BaseAgent {
 
     // How many records we are willing to hold onto for any given message.
-    public static final int MEMORY = 1000;
 
-    public PeerPressureAgent(int initialUSD, int initialBTC) {
-        super(initialUSD, initialBTC);
+    public PeerPressureAgent(int initialUSD, int initialBTC, int windowSize) {
+        super(initialUSD, initialBTC, windowSize);
     }
 
     @Override
@@ -44,7 +42,7 @@ public class PeerPressureAgent extends BaseAgent {
                     }
 
                     // Parameters
-                    long sequence = json.getLong(Coinbase.SEQUENCE);
+                    //long sequence = json.getLong(Coinbase.SEQUENCE);
                     double price = json.getDouble(Coinbase.PRICE);
                     String side = json.getString(Coinbase.SIDE);
 
@@ -58,22 +56,13 @@ public class PeerPressureAgent extends BaseAgent {
                                         "Starting with %f USD and %f BTC which totals %f USD\n",
                                         myUSD, myBTC, total);
                             }
-                            matches.add(price);
-                            if (matches.size() > MEMORY) {
-                                matches.removeFirst();
-                            }
                             makeDecision();
+                            incrementWindow(matches, price);
                         } else if (type.equals(Coinbase.RECEIVED)) {
                             if (Coinbase.BUY.equals(side)) {
-                                buys.add(price);
-                                if (buys.size() > MEMORY) {
-                                    buys.removeFirst();
-                                }
+                                incrementWindow(buys, price);
                             } else if (Coinbase.SELL.equals(side)) {
-                                sells.add(price);
-                                if (sells.size() > MEMORY) {
-                                    sells.removeFirst();
-                                }
+                                incrementWindow(sells, price);
                             } else {
                                 System.err.println("Could not recognize side: " + side);
                             }
@@ -84,16 +73,6 @@ public class PeerPressureAgent extends BaseAgent {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-            }
-
-            @Override
-            public void onWebSocketClose(int statusCode, String reason) {
-                super.onWebSocketClose(statusCode, reason);
-            }
-
-            @Override
-            public void onWebSocketError(Throwable e) {
-                super.onWebSocketError(e);
             }
         };
     }
