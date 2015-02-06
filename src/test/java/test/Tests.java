@@ -1,14 +1,21 @@
 package test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Queue;
 
 import org.junit.Test;
 
+import agents.Cluster;
+import agents.EMClusters;
+import agents.EMClusters.ClusterException;
 import agents.LatentSourceModel;
 import agents.PeerPressureAgent;
 import coinbase.Coinbase;
@@ -204,6 +211,31 @@ public class Tests {
 
         if (parallelTime < serialTime) {
             fail("Time to start using a parallel calculateSimilarities!");
+        }
+    }
+
+    @Test
+    public void EM_Cluster() {
+        double[][] vectors = new double[4][2];
+        vectors[0] = new double[]{ 3, 6 };
+        vectors[1] = new double[]{ 4, 5 };
+        vectors[2] = new double[]{ 1, 3 };
+        vectors[3] = new double[]{ 2, 1 };
+        double[] labels = { 0, 1, 0, 1 };
+        try {
+            EMClusters clusterer = new EMClusters(vectors, labels, 2);
+            double[][] centroids = new double[2][2];
+            centroids[0] = new double[]{1, 4};
+            centroids[1] = new double[]{3, 4};
+            clusterer.setCentroids(centroids);
+            clusterer.run();
+
+            List<double[]> solutionCentroids = clusterer.getCentroids();
+            for (double[] centroid : solutionCentroids) {
+                System.out.println(Arrays.toString(centroid));
+            }
+        } catch (ClusterException e) {
+            fail(e.getMessage());
         }
     }
 }

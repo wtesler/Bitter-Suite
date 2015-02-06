@@ -103,11 +103,8 @@ public class LatentSourceModel {
             sum += pattern1[i] * pattern2[i];
         }
 
-        // Why minus 1?
-        double denom = pattern1.length - 1;
-
         // return the variance
-        return sum / denom;
+        return sum / pattern1.length;
     }
 
     /**
