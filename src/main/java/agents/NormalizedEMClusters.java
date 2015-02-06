@@ -59,13 +59,14 @@ public class NormalizedEMClusters extends EMClusters {
         // Find variance of features
         double std = std(features, mean);
 
-        //System.out.format("before; mean: %f variance %f\n", mean, std);
+        // System.out.format("before; mean: %f variance %f\n", mean, std);
 
         // Normalize to a mean of 0 and a variance of 1
         for (int i = 0; i < features.length; i++) {
             features[i] = (features[i] - mean) / std;
         }
-        //System.out.format("after; mean: %f variance %f\n", mean(features), std(features, mean(features)));
+        // System.out.format("after; mean: %f variance %f\n", mean(features),
+        // std(features, mean(features)));
         return features;
     }
 
