@@ -9,14 +9,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Queue;
 
 import org.junit.Test;
 
-import agents.Cluster;
 import agents.EMClusters;
-import agents.EMClusters.ClusterException;
 import agents.LatentSourceModel;
+import agents.NormalizedEMClusters;
 import agents.PeerPressureAgent;
 import coinbase.Coinbase;
 import coinbase.CoinbaseClient;
@@ -217,25 +215,41 @@ public class Tests {
     @Test
     public void EM_Cluster() {
         double[][] vectors = new double[4][2];
-        vectors[0] = new double[]{ 3, 6 };
-        vectors[1] = new double[]{ 4, 5 };
-        vectors[2] = new double[]{ 1, 3 };
-        vectors[3] = new double[]{ 2, 1 };
-        double[] labels = { 0, 1, 0, 1 };
-        try {
-            EMClusters clusterer = new EMClusters(vectors, labels, 2);
-            double[][] centroids = new double[2][2];
-            centroids[0] = new double[]{1, 4};
-            centroids[1] = new double[]{3, 4};
-            clusterer.setCentroids(centroids);
-            clusterer.run();
+        vectors[0] = new double[] { 3, 6 };
+        vectors[1] = new double[] { 4, 5 };
+        vectors[2] = new double[] { 1, 3 };
+        vectors[3] = new double[] { 2, 1 };
+        EMClusters clusterer = new EMClusters(vectors, 2);
+        double[][] centroids = new double[2][2];
+        centroids[0] = new double[] { 1, 4 };
+        centroids[1] = new double[] { 3, 4 };
+        clusterer.setCentroids(centroids);
+        clusterer.run();
+        List<double[]> solutionCentroids = clusterer.getCentroids();
+        for (double[] centroid : solutionCentroids) {
+            System.out.println(Arrays.toString(centroid));
+        }
+    }
 
-            List<double[]> solutionCentroids = clusterer.getCentroids();
-            for (double[] centroid : solutionCentroids) {
-                System.out.println(Arrays.toString(centroid));
-            }
-        } catch (ClusterException e) {
-            fail(e.getMessage());
+    @Test
+    public void EM_Cluster_Normalized() {
+        double[][] vectors = new double[4][2];
+        vectors[0] = NormalizedEMClusters.normalizeVector(new double[] { 3, 6 });
+        vectors[1] = NormalizedEMClusters.normalizeVector(new double[] { 4, 5 });
+        vectors[2] = NormalizedEMClusters.normalizeVector(new double[] { 1, 3 });
+        vectors[3] = NormalizedEMClusters.normalizeVector(new double[] { 2, 1 });
+        for (int i = 0; i < vectors.length; i++) {
+            System.out.println(Arrays.toString(vectors[i]));
+        }
+        NormalizedEMClusters clusterer = new NormalizedEMClusters(vectors, 2);
+        double[][] centroids = new double[2][2];
+        centroids[0] = new double[] { 1, 4 };
+        centroids[1] = new double[] { 3, 4 };
+        clusterer.setCentroids(centroids);
+        clusterer.run();
+        List<double[]> solutionCentroids = clusterer.getCentroids();
+        for (double[] centroid : solutionCentroids) {
+            System.out.println(Arrays.toString(centroid));
         }
     }
 }
