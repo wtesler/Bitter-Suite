@@ -350,7 +350,7 @@ public class Tests {
             Historian historian = new Historian(response);
 
             // 6 samples a minute for 15 minutes.
-            final int windowSize =  10 * 30;
+            final int windowSize =  10 * 15;
 
             // Get the featuresList from the historian
             double[][] featuresList = historian.extractFeaturesList(windowSize);
