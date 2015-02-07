@@ -10,23 +10,23 @@ public class EMClusters {
     /**
      * The array of features we are analyzing
      */
-    private double[][] featuresList;
+    protected double[][] featuresList;
 
     /**
      * The centroids we are discovering.
      */
-    private double[][] centroids;
+    protected double[][] centroids;
 
     /**
      * Lookup table that stores precomputed probability density values for
      * features.
      */
-    private double[][] memo;
+    protected double[][] memo;
 
     /**
      * How much error are we willing to accept (used for detecting convergence)
      */
-    private static final double ALLOWED_ERROR = 0.00000001;
+    protected static final double ALLOWED_ERROR = 0.0000000001;
 
     /**
      * @param featuresList
@@ -72,7 +72,7 @@ public class EMClusters {
      *         changed). This indicates to the {@link #run() run()} method that
      *         it should stop running (having achieved convergence).
      */
-    final private boolean assign() {
+    protected boolean assign() {
         // becomes true when probability density value changes. This is an
         // indicator whether our memo has converged or not.
         boolean changed = false;
@@ -180,8 +180,8 @@ public class EMClusters {
      *
      * @return probability density value.
      */
-    final double probabilityDensity(double[] features, double[] centroid) {
-        double similarity = distanceSquared(features, centroid);
+    protected double probabilityDensity(double[] features, double[] centroid) {
+        double similarity = difference(features, centroid);
         /*
          * We DO NOT include the Z value 1/sqrt(2pi) in our calculations because
          * this value will normalize anyways.
@@ -212,7 +212,7 @@ public class EMClusters {
      *            vector
      * @return
      */
-    public double distanceSquared(double[] feature1, double[] feature2) {
+    public double difference(double[] feature1, double[] feature2) {
         int sum = 0;
         for (int i = 0; i < feature1.length; i++) {
             sum += (feature1[i] - feature2[i]) * (feature1[i] - feature2[i]);

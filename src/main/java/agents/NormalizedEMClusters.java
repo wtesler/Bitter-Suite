@@ -20,7 +20,7 @@ public class NormalizedEMClusters extends EMClusters {
      * @return a similarity rating from <b>-1 to 1.</b>
      */
     @Override
-    public double distanceSquared(double[] feature1, double[] feature2) {
+    public double difference(double[] feature1, double[] feature2) {
         double sum = 0;
         double mean1 = mean(feature1);
         double mean2 = mean(feature2);

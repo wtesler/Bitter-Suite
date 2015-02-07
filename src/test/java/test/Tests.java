@@ -19,6 +19,7 @@ import agents.Historian;
 import agents.LatentSourceModel;
 import agents.NormalizedEMClusters;
 import agents.PeerPressureAgent;
+import agents.SimpleClusters;
 import coinbase.Coinbase;
 import coinbase.CoinbaseClient;
 import coinbase.ResponseDetail;
@@ -282,7 +283,7 @@ public class Tests {
     }
 
     @Test
-    public void testHistorian() {
+    public void testEntireNormalizedProcess() {
         // Calendar start and end dates.
         Calendar cal = Calendar.getInstance();
 
@@ -297,7 +298,7 @@ public class Tests {
         Date endDate = cal.getTime();
 
         try {
-            double[][] response = CoinbaseClient.getHistoricalData(startDate, endDate, 10);
+            double[][] response = CoinbaseClient.getHistoricalData(startDate, endDate, 1000);
             Historian historian = new Historian(response);
 
             // 6 samples a minute for 15 minutes.
@@ -314,6 +315,73 @@ public class Tests {
                             clusterer.getMemo());
             double[] estimates = estimator.getEstimates();
             out.println(Arrays.toString(estimates));
+
+            out.println("Done");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void SimpleClusters() {
+        try {
+
+            // Calendar start and end dates.
+            Calendar cal = Calendar.getInstance();
+
+            // Some arbitrarily far away past
+            cal.set(2014, 0, 1, 0, 0, 0);
+            Date startDate = cal.getTime();
+
+            cal.clear();
+
+            // Some arbitrarily far away future
+            cal.set(2020, 0, 1, 0, 0, 0);
+            Date endDate = cal.getTime();
+
+            // Every 10 seconds.
+            int granularity = 10;
+
+            // Get all the data from the start date to the end date.
+            double[][] response = CoinbaseClient.getHistoricalData(startDate, endDate, granularity);
+
+            // Let the historian organize the data.
+            Historian historian = new Historian(response);
+
+            // 6 samples a minute for 15 minutes.
+            final int windowSize =  10 * 30;
+
+            // Get the featuresList from the historian
+            double[][] featuresList = historian.extractFeaturesList(windowSize);
+
+            // Scale all the features so that every value lies between 0 and 1.
+            // We can do this without loss of information because the historian
+            // holds volume data for all features.
+            for (double[] features : featuresList) {
+                SimpleClusters.scale(features);
+            }
+
+            // Cluster the data into 100 centroids.
+            SimpleClusters clusterer = new SimpleClusters(featuresList, 100);
+            clusterer.run();
+
+            /*
+             * The estimator factors all the information such asvolume and
+             * labels together with the cluster data to give us estimated future
+             * values for the centroids. Note, the values that the estimator
+             * returns are not scaled correctly and must be weighted through
+             * learning.
+             */
+            Estimator estimator =
+                    new Estimator(featuresList, historian.getLabels(), historian.getVolumes(),
+                            clusterer.getMemo());
+
+            // Print the estimates
+            double[] estimates = estimator.getEstimates();
+            for (int i = 0; i < estimates.length; i++) {
+                out.println("Centroid " + i + " guess: " + estimates[i]);
+            }
 
             out.println("Done");
         } catch (Exception e) {
