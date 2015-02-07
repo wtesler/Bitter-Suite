@@ -9,8 +9,16 @@ public class SimpleClusters extends EMClusters {
         super(featuresList, k);
     }
 
-    /*
+    /**
+     * Calculates how "different" two features are.<br/>
+     * <br/>
      * 1 is same. -1 is very different. 0 is no correlation.
+     *
+     * @param features1
+     *            a feature vector
+     * @param features2
+     *            a feature vector
+     * @return
      */
     @Override
     public double difference(double[] features1, double[] features2) {
@@ -23,6 +31,7 @@ public class SimpleClusters extends EMClusters {
     }
 
     /**
+     *
      * @param features
      * @param centroid
      * @return e^(difference^2) is how we efficiently calculate distance.
