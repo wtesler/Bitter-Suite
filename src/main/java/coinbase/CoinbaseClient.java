@@ -13,6 +13,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class CoinbaseClient {
@@ -90,7 +91,7 @@ public class CoinbaseClient {
      *            how often we want to sample the data (in seconds)
      * @return A json formatted string containing the retrieved data.
      */
-    public static String getHistoricalData(Date startDate, Date endDate, int granularity)
+    public static double[][] getHistoricalData(Date startDate, Date endDate, int granularity)
             throws Exception {
 
         // Low Security needed
@@ -116,7 +117,18 @@ public class CoinbaseClient {
 
         httpClient.stop();
 
-        return res.getContentAsString();
+        String content = res.getContentAsString();
+
+        JSONArray data = new JSONArray(content);
+        // Six doubles returned for each bucket.
+        double[][] history = new double[data.length()][6];
+        for (int i = 0; i < history.length; i++) {
+            for (int j = 0; j < history[0].length; j++) {
+                history[i][j] = ((JSONArray) data.get(i)).getDouble(j);
+            }
+        }
+
+        return history;
     }
 
     /**

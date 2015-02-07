@@ -1,24 +1,18 @@
 package agents;
 
-import java.util.Arrays;
-
 public class NormalizedEMClusters extends EMClusters {
 
     public NormalizedEMClusters(double[][] featuresList, int k) {
         super(featuresList, k);
-        // Check that at least the first features are all normalized.
-        for (int i = 0; i < featuresList[0].length; i++) {
-            if (featuresList[0][i] < -1.0 || featuresList[0][i] > 1.0) {
-                System.err.println("These features don't seem normalized: "
-                        + Arrays.toString(featuresList[0]));
-            }
-        }
     }
 
     /**
-     * The equation for <b>variance</b> Since both patterns are assumed to be
-     * normalized, we do not need to include mean in the calculations.
+     * The equation for <b>cosine similarity</b> Since both patterns are assumed
+     * to be normalized as unit vectors, we do not need to include mean and std
+     * in the calculations.
      *
+     * @see <a href= "http://en.wikipedia.org/wiki/Cosine_similarity" >Wikipedia
+     *      Article</a
      * @param pattern1
      *            a <b>normalized</b> (mean=0, std=1) vector.
      * @param pattern2
@@ -26,20 +20,26 @@ public class NormalizedEMClusters extends EMClusters {
      * @return a similarity rating from <b>-1 to 1.</b>
      */
     @Override
-    public double similarity(double[] feature1, double[] feature2) {
+    public double distanceSquared(double[] feature1, double[] feature2) {
         double sum = 0;
+        double mean1 = mean(feature1);
+        double mean2 = mean(feature2);
         for (int i = 0; i < feature1.length; i++) {
+
             /*
              * The calculation here is a simple dot product. Very
              * computationally easy as long as mean=0 and std=1. That is why the
              * patterns must be normalized with normalizeVector() before being
              * passed into this function.
              */
-            sum += feature1[i] * feature2[i];
+            sum += (feature1[i] - mean1) * (feature2[i] - mean2);
         }
 
         sum /= feature1.length;
-        // return the variance
+        sum /= variance(feature2, mean2);
+        sum /= variance(feature1, mean1);
+
+        // return the distance
         return sum;
     }
 
@@ -57,7 +57,7 @@ public class NormalizedEMClusters extends EMClusters {
         double mean = mean(features);
 
         // Find variance of features
-        double std = std(features, mean);
+        double std = Math.sqrt(variance(features, mean));
 
         // System.out.format("before; mean: %f variance %f\n", mean, std);
 
@@ -65,6 +65,7 @@ public class NormalizedEMClusters extends EMClusters {
         for (int i = 0; i < features.length; i++) {
             features[i] = (features[i] - mean) / std;
         }
+
         // System.out.format("after; mean: %f variance %f\n", mean(features),
         // std(features, mean(features)));
         return features;
@@ -80,14 +81,14 @@ public class NormalizedEMClusters extends EMClusters {
         return mean;
     }
 
-    private static double std(double[] features, double mean) {
+    private static double variance(double[] features, double mean) {
         // Find variance of features around mean.
         double variance = 0;
         for (int i = 0; i < features.length; i++) {
-            variance += Math.pow(features[i] - mean, 2);
+            variance += (features[i] - mean) * (features[i] - mean);
         }
         variance /= features.length;
-        return Math.sqrt(variance);
+        return variance;
     }
 
 }

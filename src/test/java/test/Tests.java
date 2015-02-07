@@ -1,5 +1,6 @@
 package test;
 
+import static java.lang.System.out;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -13,6 +14,8 @@ import java.util.List;
 import org.junit.Test;
 
 import agents.EMClusters;
+import agents.Estimator;
+import agents.Historian;
 import agents.LatentSourceModel;
 import agents.NormalizedEMClusters;
 import agents.PeerPressureAgent;
@@ -214,12 +217,35 @@ public class Tests {
 
     @Test
     public void EM_Cluster() {
+        double[][] featuresList = new double[4][2];
+        featuresList[0] = new double[] { 3, 6 };
+        featuresList[1] = new double[] { 4, 5 };
+        featuresList[2] = new double[] { 1, 3 };
+        featuresList[3] = new double[] { 2, 1 };
+        EMClusters clusterer = new EMClusters(featuresList, 2);
+
+        // Change the centroids in the cluster (for testing purposes)
+        double[][] centroids = new double[2][2];
+        centroids[0] = new double[] { 1, 4 };
+        centroids[1] = new double[] { 3, 4 };
+        clusterer.setCentroids(centroids);
+        clusterer.run();
+
+        // Estimate the expected value of bitcoin ten seconds into the future.
+        Estimator estimator =
+                new Estimator(featuresList, new double[] { 0, 0, 5, 0 },
+                        new double[] { 1, 1, 1, 1 }, clusterer.getMemo());
+        System.out.println(Arrays.toString(estimator.getEstimates()));
+    }
+
+    @Test
+    public void EM_Cluster_Normalized() {
         double[][] vectors = new double[4][2];
-        vectors[0] = new double[] { 3, 6 };
-        vectors[1] = new double[] { 4, 5 };
-        vectors[2] = new double[] { 1, 3 };
-        vectors[3] = new double[] { 2, 1 };
-        EMClusters clusterer = new EMClusters(vectors, 2);
+        vectors[0] = NormalizedEMClusters.normalizeVector(new double[] { 3, 6 });
+        vectors[1] = NormalizedEMClusters.normalizeVector(new double[] { 4, 5 });
+        vectors[2] = NormalizedEMClusters.normalizeVector(new double[] { 1, 3 });
+        vectors[3] = NormalizedEMClusters.normalizeVector(new double[] { 2, 1 });
+        NormalizedEMClusters clusterer = new NormalizedEMClusters(vectors, 2);
         double[][] centroids = new double[2][2];
         centroids[0] = new double[] { 1, 4 };
         centroids[1] = new double[] { 3, 4 };
@@ -232,24 +258,67 @@ public class Tests {
     }
 
     @Test
-    public void EM_Cluster_Normalized() {
-        double[][] vectors = new double[4][2];
-        vectors[0] = NormalizedEMClusters.normalizeVector(new double[] { 3, 6 });
-        vectors[1] = NormalizedEMClusters.normalizeVector(new double[] { 4, 5 });
-        vectors[2] = NormalizedEMClusters.normalizeVector(new double[] { 1, 3 });
-        vectors[3] = NormalizedEMClusters.normalizeVector(new double[] { 2, 1 });
-        for (int i = 0; i < vectors.length; i++) {
-            System.out.println(Arrays.toString(vectors[i]));
+    public void getAllHistoricData() {
+        // Calendar start and end dates.
+        Calendar cal = Calendar.getInstance();
+
+        // Some arbitrarily far away past
+        cal.set(2014, 0, 1, 0, 0, 0);
+        Date startDate = cal.getTime();
+
+        cal.clear();
+
+        // Some arbitrarily far away future
+        cal.set(2020, 0, 1, 0, 0, 0);
+        Date endDate = cal.getTime();
+
+        try {
+            double[][] response = CoinbaseClient.getHistoricalData(startDate, endDate, 10);
+            out.println("Done");
+
+        } catch (Exception e) {
+            fail(e.getMessage());
         }
-        NormalizedEMClusters clusterer = new NormalizedEMClusters(vectors, 2);
-        double[][] centroids = new double[2][2];
-        centroids[0] = new double[] { 1, 4 };
-        centroids[1] = new double[] { 3, 4 };
-        clusterer.setCentroids(centroids);
-        clusterer.run();
-        List<double[]> solutionCentroids = clusterer.getCentroids();
-        for (double[] centroid : solutionCentroids) {
-            System.out.println(Arrays.toString(centroid));
+    }
+
+    @Test
+    public void testHistorian() {
+        // Calendar start and end dates.
+        Calendar cal = Calendar.getInstance();
+
+        // Some arbitrarily far away past
+        cal.set(2014, 0, 1, 0, 0, 0);
+        Date startDate = cal.getTime();
+
+        cal.clear();
+
+        // Some arbitrarily far away future
+        cal.set(2020, 0, 1, 0, 0, 0);
+        Date endDate = cal.getTime();
+
+        try {
+            double[][] response = CoinbaseClient.getHistoricalData(startDate, endDate, 10);
+            Historian historian = new Historian(response);
+
+            // 6 samples a minute for 15 minutes.
+            final int windowSize = 6 * 15;
+            double[][] featuresList = historian.extractFeaturesList(windowSize);
+            for (double[] features : featuresList) {
+                NormalizedEMClusters.normalizeVector(features);
+            }
+            NormalizedEMClusters clusterer = new NormalizedEMClusters(featuresList, 100);
+            clusterer.run();
+
+            Estimator estimator =
+                    new Estimator(featuresList, historian.getLabels(), historian.getVolumes(),
+                            clusterer.getMemo());
+            double[] estimates = estimator.getEstimates();
+            out.println(Arrays.toString(estimates));
+
+            out.println("Done");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
         }
     }
 }
