@@ -130,7 +130,7 @@ public class CentroidLayoutController {
                 SimpleClusters.scale(features);
             }
 
-            // Cluster the data into 100 centroids.
+            // Cluster the data into 20 centroids.
             SimpleClusters clusterer = new SimpleClusters(history.features, 20);
             double[][] memo = clusterer.run();
 
