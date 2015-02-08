@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.chart.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+<Pane fx:id="root" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="gui.CentroidLayoutController">
+	<children>
+		<LineChart fx:id="lc_chart" animated="false" createSymbols="false" layoutX="13.0" layoutY="13.0" prefHeight="425.0" prefWidth="625.0" title="Centroid Monitor">
+			<xAxis>
+				<NumberAxis autoRanging="true" forceZeroInRange="false" lowerBound="0" side="BOTTOM" tickLabelsVisible="false" upperBound="500" />
+			</xAxis>
+			<yAxis>
+				<NumberAxis forceZeroInRange="false" side="LEFT" />
+			</yAxis>
+		</LineChart>
+      <Button fx:id="bt_next" layoutX="572.0" layoutY="14.0" mnemonicParsing="false" text="next" />
+      <Button fx:id="bt_prev" layoutX="507.0" layoutY="14.0" mnemonicParsing="false" text="previous" />
+      <Label fx:id="l_fitness" layoutX="96.0" layoutY="18.0" />
+	</children>
+</Pane>

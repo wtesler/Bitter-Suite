@@ -105,7 +105,8 @@ public class SimpleClusters extends EMClusters {
         }
         //System.out.println(Arrays.toString(assignments));
         System.out.println("New Assignments: " + reassignments);
-        if (reassignments >= pastReassignments || reassignments == 0) {
+        // reassignments >= pastReassignments
+        if (reassignments == 0) {
             // We've reached a local optima. We should halt the algorithm.
             return false;
         }
