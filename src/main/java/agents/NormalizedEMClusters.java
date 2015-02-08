@@ -19,8 +19,7 @@ public class NormalizedEMClusters extends EMClusters {
      *            a <b>normalized</b> (mean=0, std=1) vector.
      * @return a similarity rating from <b>-1 to 1.</b>
      */
-    @Override
-    public double difference(double[] feature1, double[] feature2) {
+    public static double difference(double[] feature1, double[] feature2) {
         double sum = 0;
         double mean1 = mean(feature1);
         double mean2 = mean(feature2);

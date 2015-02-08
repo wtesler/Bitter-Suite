@@ -2,34 +2,46 @@ package agents;
 
 public class Estimator {
 
-    double[] estimates;
-
-    public Estimator(double[][] featuresList, double[] labels, double[] volumes, double[][] memo) {
-        estimates = new double[memo[0].length];
-        estimate(featuresList, labels, volumes, memo);
-    }
+    private Estimator() {
+    };
 
     /**
-     * @param featuresList the list of features we got from the historian
-     * @param labels the labels (10-second future price) associated with each feature
-     * @param volumes the volumes (amount transacted) during each features timespan.
-     * @param memo a record of similarity measurements between every feature to every centroid.
+     * @param featuresList
+     *            the list of features we got from the historian
+     * @param labels
+     *            the labels (10-second future price) associated with each
+     *            feature
+     * @param volumes
+     *            the volumes (amount transacted) during each features timespan.
+     * @param memo
+     *            a record of similarity measurements between every feature to
+     *            every centroid.
      */
-    private void estimate(double[][] featuresList, double[] labels, double[] volumes,
-            double[][] memo) {
-        for (int i = 0; i < featuresList.length; i++) {
-            for (int j = 0; j < estimates.length; j++) {
-                // Our estimate is based off of 3 things...
-                estimates[j] += labels[i] * volumes[i] * memo[i][j];
+    public static double[] getConfidenceScores(double[][] memo) {
+        double[] scores = new double[memo[0].length];
+        for (int i = 0; i < memo.length; i++) {
+            for (int j = 0; j < scores.length; j++) {
+                scores[j] += memo[i][j];
             }
         }
-
-        // Scale the estimates so that they all fall between [0, 1)
-        SimpleClusters.scale(estimates);
+        for (int i = 0; i < scores.length; i++) {
+            scores[i] /= memo.length;
+        }
+        return scores;
     }
 
-    public double[] getEstimates() {
-        return estimates;
+    public static double[] getCentroidLabels(double[] featureLabels, double[][] memo) {
+        double[] centroidLabels = new double[memo[0].length];
+        for (int i = 0; i < centroidLabels.length; i++) {
+            // Used for normalization.
+            double memoSum = 0;
+            for (int j = 0; j < featureLabels.length; j++) {
+                centroidLabels[i] += featureLabels[j] * memo[j][i];
+                memoSum += memo[j][i];
+            }
+            // Normalize the centroid labels.
+            centroidLabels[i] /= memoSum;
+        }
+        return centroidLabels;
     }
-
 }

@@ -5,8 +5,19 @@ import java.util.DoubleSummaryStatistics;
 
 public class SimpleClusters extends EMClusters {
 
+    // Keeps a record of which centroid is assigned to each feature. Useful for
+    // convergence.
+    private int[] assignments;
+
+    // How many features got reassigned last round? Useful for convergence.
+    private int pastReassignments = Integer.MAX_VALUE;
+
     public SimpleClusters(double[][] featuresList, int k) {
         super(featuresList, k);
+        assignments = new int[featuresList.length];
+        for (int i = 0; i < assignments.length; i++) {
+            assignments[i] = -1;
+        }
     }
 
     /**
@@ -20,12 +31,11 @@ public class SimpleClusters extends EMClusters {
      *            a feature vector
      * @return
      */
-    @Override
-    public double difference(double[] features1, double[] features2) {
+    public static double difference(double[] features1, double[] features2) {
         double distance = features1.length;
         for (int i = 0; i < features1.length; i++) {
-            double diff = features1[i] - features2[i];
-            distance -= 2 * diff;
+            double diff = Math.abs(features1[i] - features2[i]);
+            distance -= diff;
         }
         return distance / features1.length;
     }
@@ -36,9 +46,9 @@ public class SimpleClusters extends EMClusters {
      * @param centroid
      * @return e^(difference^2) is how we efficiently calculate distance.
      */
-    @Override
-    protected double probabilityDensity(double[] features, double[] centroid) {
-        return Math.pow(Math.exp(difference(features, centroid)), 2);
+    static double probabilityDensity(double[] features, double[] centroid) {
+        // return Math.pow(Math.exp(difference(features, centroid)), 2);
+        return difference(features, centroid);
     }
 
     /**
@@ -48,9 +58,15 @@ public class SimpleClusters extends EMClusters {
      */
     public static void scale(double[] features) {
         DoubleSummaryStatistics stats = Arrays.stream(features).summaryStatistics();
-        for (int i = 0; i < features.length; i++) {
-            features[i] -= stats.getMin();
-            features[i] /= stats.getMax() - stats.getMin();
+        if (stats.getMin() == stats.getMax()) {
+            for (int i = 0; i < features.length; i++) {
+                features[i] = 0;
+            }
+        } else {
+            for (int i = 0; i < features.length; i++) {
+                features[i] -= stats.getMin();
+                features[i] /= stats.getMax() - stats.getMin();
+            }
         }
     }
 
@@ -62,26 +78,39 @@ public class SimpleClusters extends EMClusters {
      */
     @Override
     protected boolean assign() {
-        // becomes true when probability density value changes. This is an
-        // indicator whether our memo has converged or not.
-        boolean changed = false;
-        // outer-scoped for efficiency but only used in the inner-scope.
-        double[] probabilities = new double[centroids.length];
+        int reassignments = 0;
         for (int i = 0; i < featuresList.length; i++) {
+            double[] probabilities = new double[centroids.length];
+            int assignedCentroid = -1;
+            double max = Double.NEGATIVE_INFINITY;
             for (int j = 0; j < centroids.length; j++) {
                 // Compute probability density value.
                 probabilities[j] = probabilityDensity(featuresList[i], centroids[j]);
-                if (!changed
-                        && (probabilities[j] - memo[i][j] > ALLOWED_ERROR || probabilities[j]
-                                - memo[i][j] < -ALLOWED_ERROR)) {
-                    // Something has changed.
-                    changed = true;
+
+                if (probabilities[j] > max) {
+                    assignedCentroid = j;
+                    max = probabilities[j];
                 }
 
-                memo[i][j] = probabilities[j];
+                double learntW = .25;
+                memo[i][j] = learntW * probabilities[j];
             }
+
+            if (assignments[i] == -1 || assignments[i] != assignedCentroid) {
+                reassignments++;
+                assignments[i] = assignedCentroid;
+            }
+            // The assigned centroid gets a bonus
+            memo[i][assignedCentroid] = 1;
         }
-        return changed;
+        //System.out.println(Arrays.toString(assignments));
+        System.out.println("New Assignments: " + reassignments);
+        if (reassignments >= pastReassignments || reassignments == 0) {
+            // We've reached a local optima. We should halt the algorithm.
+            return false;
+        }
+        pastReassignments = reassignments;
+        return true;
     }
 
 }

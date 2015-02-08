@@ -26,7 +26,7 @@ public class EMClusters {
     /**
      * How much error are we willing to accept (used for detecting convergence)
      */
-    protected static final double ALLOWED_ERROR = 0.0000000001;
+    protected static final double ALLOWED_ERROR = 0.1;
 
     /**
      * @param featuresList
@@ -53,7 +53,7 @@ public class EMClusters {
 
     int i = 0;
 
-    final public void run() {
+    final public double[][] run() {
         while (true) {
             // Assign probability density values to the memo.
             if (!assign()) {
@@ -62,6 +62,7 @@ public class EMClusters {
             // Adjust centroids according to the memo.
             update();
         }
+        return memo;
     }
 
     /**
@@ -98,7 +99,7 @@ public class EMClusters {
                 }
                 // Store the probability density in our memo so that it can be
                 // used by our agents.
-                    memo[i][j] = probabilities[j];
+                memo[i][j] = probabilities[j];
             }
         }
         return changed;
@@ -153,13 +154,13 @@ public class EMClusters {
 
         // Initialize our centroids to randomly selected vectors.
         for (int i = 0; i < centroids.length; i++) {
-            centroids[i] = featuresList[random[i]];
+            centroids[i] = Arrays.copyOf(featuresList[random[i]], featuresList[random[i]].length);
         }
     }
 
     // Initialize centroids with a given list of vectors
     final public void setCentroids(final double[][] centroids) {
-        this.centroids = centroids;
+        this.centroids = Arrays.copyOf(centroids, centroids.length);
     }
 
     // show another class the centroids, but don't let them modify it.
@@ -180,7 +181,7 @@ public class EMClusters {
      *
      * @return probability density value.
      */
-    protected double probabilityDensity(double[] features, double[] centroid) {
+    static double probabilityDensity(double[] features, double[] centroid) {
         double similarity = difference(features, centroid);
         /*
          * We DO NOT include the Z value 1/sqrt(2pi) in our calculations because
@@ -212,13 +213,13 @@ public class EMClusters {
      *            vector
      * @return
      */
-    public double difference(double[] feature1, double[] feature2) {
+    public static double difference(double[] feature1, double[] feature2) {
         int sum = 0;
         for (int i = 0; i < feature1.length; i++) {
             sum += (feature1[i] - feature2[i]) * (feature1[i] - feature2[i]);
         }
         // No need to sqrt because the PDF has the form distance^2 anyways.
-        return sum;
+        return Math.sqrt(sum);
     }
 
 }

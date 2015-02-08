@@ -16,10 +16,14 @@ import org.junit.Test;
 import agents.EMClusters;
 import agents.Estimator;
 import agents.Historian;
+import agents.Historian.History;
+import agents.Historian.SetFilter;
+import agents.Historian.TypeFilter;
 import agents.LatentSourceModel;
 import agents.NormalizedEMClusters;
 import agents.PeerPressureAgent;
 import agents.SimpleClusters;
+import agents.TestAgent;
 import coinbase.Coinbase;
 import coinbase.CoinbaseClient;
 import coinbase.ResponseDetail;
@@ -76,8 +80,10 @@ public class Tests {
 
     @Test
     public void normalizeVector() {
-        double[] patternA = { 5, 4, 3, 2, 1 };
-        double[] patternB = { 1, 2, 3, 4, 100 };
+        double[] patternA =
+        { 5, 4, 3, 2, 1 };
+        double[] patternB =
+        { 1, 2, 3, 4, 100 };
         LatentSourceModel.normalizeVector(patternA);
         LatentSourceModel.normalizeVector(patternB);
         double mean1 = Arrays.stream(patternA).average().getAsDouble();
@@ -90,22 +96,30 @@ public class Tests {
     @Test
     public void latentSourceModelEstimations() {
 
-        double[] pattern = { 1, 2, 3, 4, 5 };
-        double[] samePattern = { 1, 2, 3, 4, 5 };
-        double[] similarPattern = { 1, 2, 3, 4, 6 };
-        double[] diffPattern = { 5, 4, 3, 2, 1 };
+        double[] pattern =
+        { 1, 2, 3, 4, 5 };
+        double[] samePattern =
+        { 1, 2, 3, 4, 5 };
+        double[] similarPattern =
+        { 1, 2, 3, 4, 6 };
+        double[] diffPattern =
+        { 5, 4, 3, 2, 1 };
         LatentSourceModel.normalizeVector(pattern);
         LatentSourceModel.normalizeVector(samePattern);
         LatentSourceModel.normalizeVector(diffPattern);
         LatentSourceModel.normalizeVector(similarPattern);
 
-        double[][] knownPatterns1 = { samePattern, similarPattern };
-        double[] knownPriceChanges1 = { 0, 1 };
+        double[][] knownPatterns1 =
+        { samePattern, similarPattern };
+        double[] knownPriceChanges1 =
+        { 0, 1 };
         double estimate1 =
                 LatentSourceModel.estimateFuturePrice(pattern, knownPatterns1, knownPriceChanges1,
                         1);
-        double[][] knownPatterns2 = { samePattern, diffPattern };
-        double[] knownPriceChanges2 = { 0, 1 };
+        double[][] knownPatterns2 =
+        { samePattern, diffPattern };
+        double[] knownPriceChanges2 =
+        { 0, 1 };
         double estimate2 =
                 LatentSourceModel.estimateFuturePrice(pattern, knownPatterns2, knownPriceChanges2,
                         1);
@@ -120,8 +134,10 @@ public class Tests {
 
     @Test
     public void NormalizeMethodsProduceSameResult() {
-        double[] patternA = { 1, 21, 29, 4, 6 };
-        double[] patternB = { 1, 21, 29, 4, 6 };
+        double[] patternA =
+        { 1, 21, 29, 4, 6 };
+        double[] patternB =
+        { 1, 21, 29, 4, 6 };
         LatentSourceModel.normalizeVector(patternA);
         LatentSourceModel.normalizeVectorParallel(patternB);
         assertArrayEquals(patternA, patternB, 0);
@@ -144,7 +160,8 @@ public class Tests {
         // 100 thousand
         for (int i = 0; i < 100000; i++) {
             // randomly generated pattern
-            double[] pattern = { i, i + i, i / 2, i % 2, i * i };
+            double[] pattern =
+            { i, i + i, i / 2, i % 2, i * i };
             LatentSourceModel.normalizeVector(pattern);
         }
         long serialTime = System.currentTimeMillis() - time;
@@ -154,7 +171,8 @@ public class Tests {
         // 100 thousand
         for (int i = 0; i < 100000; i++) {
             // randomly generated pattern
-            double[] pattern = { i, i + i, i / 2, i % 2, i * i };
+            double[] pattern =
+            { i, i + i, i / 2, i % 2, i * i };
             LatentSourceModel.normalizeVectorParallel(pattern);
         }
         long parallelTime = System.currentTimeMillis() - time;
@@ -180,11 +198,15 @@ public class Tests {
 
         // 100 thousand
         for (int i = 0; i < 100000; i++) {
-            double[] ourPattern = { 5, 11, 1, 23, 27 };
+            double[] ourPattern =
+            { 5, 11, 1, 23, 27 };
             // randomly generated pattern
-            double[] patternA = { i, i + i, i / 2, i % 2, i * i };
-            double[] patternB = { i << 1, i ^ 256, i >> 2, i - 2, i + 2 };
-            double[][] relevantPatterns = { patternA, patternB };
+            double[] patternA =
+            { i, i + i, i / 2, i % 2, i * i };
+            double[] patternB =
+            { i << 1, i ^ 256, i >> 2, i - 2, i + 2 };
+            double[][] relevantPatterns =
+            { patternA, patternB };
             /*
              * Calculate Similarities.
              */
@@ -202,11 +224,15 @@ public class Tests {
 
         // 100 thousand
         for (int i = 0; i < 100000; i++) {
-            double[] ourPattern = { 5, 11, 1, 23, 27 };
+            double[] ourPattern =
+            { 5, 11, 1, 23, 27 };
             // randomly generated pattern
-            double[] patternA = { i, i + i, i / 2, i % 2, i * i };
-            double[] patternB = { i << 1, i ^ 256, i >> 2, i - 2, i + 2 };
-            double[][] relevantPatterns = { patternA, patternB };
+            double[] patternA =
+            { i, i + i, i / 2, i % 2, i * i };
+            double[] patternB =
+            { i << 1, i ^ 256, i >> 2, i - 2, i + 2 };
+            double[][] relevantPatterns =
+            { patternA, patternB };
             LatentSourceModel.calculateSimilaritiesParallel(ourPattern, relevantPatterns, 1);
         }
         long parallelTime = System.currentTimeMillis() - time;
@@ -219,37 +245,46 @@ public class Tests {
     @Test
     public void EM_Cluster() {
         double[][] featuresList = new double[4][2];
-        featuresList[0] = new double[] { 3, 6 };
-        featuresList[1] = new double[] { 4, 5 };
-        featuresList[2] = new double[] { 1, 3 };
-        featuresList[3] = new double[] { 2, 1 };
+        featuresList[0] = new double[]
+        { 3, 6 };
+        featuresList[1] = new double[]
+        { 4, 5 };
+        featuresList[2] = new double[]
+        { 1, 3 };
+        featuresList[3] = new double[]
+        { 2, 1 };
         EMClusters clusterer = new EMClusters(featuresList, 2);
 
         // Change the centroids in the cluster (for testing purposes)
         double[][] centroids = new double[2][2];
-        centroids[0] = new double[] { 1, 4 };
-        centroids[1] = new double[] { 3, 4 };
+        centroids[0] = new double[]
+        { 1, 4 };
+        centroids[1] = new double[]
+        { 3, 4 };
         clusterer.setCentroids(centroids);
-        clusterer.run();
+        double[][] memo = clusterer.run();
 
         // Estimate the expected value of bitcoin ten seconds into the future.
-        Estimator estimator =
-                new Estimator(featuresList, new double[] { 0, 0, 5, 0 },
-                        new double[] { 1, 1, 1, 1 }, clusterer.getMemo());
-        System.out.println(Arrays.toString(estimator.getEstimates()));
+        System.out.println(Arrays.toString(Estimator.getConfidenceScores(memo)));
     }
 
     @Test
     public void EM_Cluster_Normalized() {
         double[][] vectors = new double[4][2];
-        vectors[0] = NormalizedEMClusters.normalizeVector(new double[] { 3, 6 });
-        vectors[1] = NormalizedEMClusters.normalizeVector(new double[] { 4, 5 });
-        vectors[2] = NormalizedEMClusters.normalizeVector(new double[] { 1, 3 });
-        vectors[3] = NormalizedEMClusters.normalizeVector(new double[] { 2, 1 });
+        vectors[0] = NormalizedEMClusters.normalizeVector(new double[]
+        { 3, 6 });
+        vectors[1] = NormalizedEMClusters.normalizeVector(new double[]
+        { 4, 5 });
+        vectors[2] = NormalizedEMClusters.normalizeVector(new double[]
+        { 1, 3 });
+        vectors[3] = NormalizedEMClusters.normalizeVector(new double[]
+        { 2, 1 });
         NormalizedEMClusters clusterer = new NormalizedEMClusters(vectors, 2);
         double[][] centroids = new double[2][2];
-        centroids[0] = new double[] { 1, 4 };
-        centroids[1] = new double[] { 3, 4 };
+        centroids[0] = new double[]
+        { 1, 4 };
+        centroids[1] = new double[]
+        { 3, 4 };
         clusterer.setCentroids(centroids);
         clusterer.run();
         List<double[]> solutionCentroids = clusterer.getCentroids();
@@ -303,17 +338,14 @@ public class Tests {
 
             // 6 samples a minute for 15 minutes.
             final int windowSize = 6 * 15;
-            double[][] featuresList = historian.extractFeaturesList(windowSize);
-            for (double[] features : featuresList) {
+            History history = historian.extractOrders(windowSize, TypeFilter.BOTH, SetFilter.BOTH);
+            for (double[] features : history.features) {
                 NormalizedEMClusters.normalizeVector(features);
             }
-            NormalizedEMClusters clusterer = new NormalizedEMClusters(featuresList, 100);
-            clusterer.run();
+            NormalizedEMClusters clusterer = new NormalizedEMClusters(history.features, 100);
+            double[][] memo = clusterer.run();
 
-            Estimator estimator =
-                    new Estimator(featuresList, historian.getLabels(), historian.getVolumes(),
-                            clusterer.getMemo());
-            double[] estimates = estimator.getEstimates();
+            double[] estimates = Estimator.getConfidenceScores(memo);
             out.println(Arrays.toString(estimates));
 
             out.println("Done");
@@ -324,63 +356,116 @@ public class Tests {
     }
 
     @Test
-    public void SimpleClusters() {
+    public void SimpleClustersEntireProcess() {
         try {
 
             // Calendar start and end dates.
             Calendar cal = Calendar.getInstance();
 
-            // Some arbitrarily far away past
-            cal.set(2014, 0, 1, 0, 0, 0);
+            cal.set(2014, 1, 1, 0, 0, 0);
             Date startDate = cal.getTime();
 
             cal.clear();
 
-            // Some arbitrarily far away future
-            cal.set(2020, 0, 1, 0, 0, 0);
+            cal.set(2017, 1, 1, 0, 0, 0);
             Date endDate = cal.getTime();
 
             // Every 10 seconds.
             int granularity = 10;
 
             // Get all the data from the start date to the end date.
+            // One minute timeframe.
             double[][] response = CoinbaseClient.getHistoricalData(startDate, endDate, granularity);
 
             // Let the historian organize the data.
             Historian historian = new Historian(response);
 
-            // 6 samples a minute for 15 minutes.
-            final int windowSize =  10 * 15;
+            final int windowSize = 90;
 
             // Get the featuresList from the historian
-            double[][] featuresList = historian.extractFeaturesList(windowSize);
+            History history =
+                    historian.extractOrders(windowSize, TypeFilter.SELLS, SetFilter.BOTH);
 
             // Scale all the features so that every value lies between 0 and 1.
             // We can do this without loss of information because the historian
             // holds volume data for all features.
-            for (double[] features : featuresList) {
+            for (double[] features : history.features) {
                 SimpleClusters.scale(features);
             }
 
             // Cluster the data into 100 centroids.
-            SimpleClusters clusterer = new SimpleClusters(featuresList, 100);
-            clusterer.run();
-
-            /*
-             * The estimator factors all the information such asvolume and
-             * labels together with the cluster data to give us estimated future
-             * values for the centroids. Note, the values that the estimator
-             * returns are not scaled correctly and must be weighted through
-             * learning.
-             */
-            Estimator estimator =
-                    new Estimator(featuresList, historian.getLabels(), historian.getVolumes(),
-                            clusterer.getMemo());
+            SimpleClusters clusterer = new SimpleClusters(history.features, 100);
+            double[][] memo = clusterer.run();
 
             // Print the estimates
-            double[] estimates = estimator.getEstimates();
-            for (int i = 0; i < estimates.length; i++) {
-                out.println("Centroid " + i + " guess: " + estimates[i]);
+            double[] confidence = Estimator.getConfidenceScores(memo);
+
+            double[] centroidLabels = Estimator.getCentroidLabels(history.labels, memo);
+
+            for (int i = 0; i < confidence.length; i++) {
+                out.println("{Centroid_" + i + ": goodness of fit: " + confidence[i]
+                        + " label: " + centroidLabels[i] + "}");
+            }
+
+            // TestAgent agent = new TestAgent(clusterer.getCentroids(),
+            // confidence, history.labels);
+
+            // agent.run(history.features);
+
+            out.println("Done");
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
+
+    @Test
+    public void thoroughSimpleClusterTest() {
+        try {
+
+            double[][] buyList =
+            {
+            { 1, 2, 3 },
+            { 3, 2, 1 },
+            { 3, 2, 1 } };
+
+            double[][] sellList =
+            {
+            { 4, 3 },
+            { 6, 1 },
+            { 6, 7 } };
+
+            for (double[] features : buyList) {
+                SimpleClusters.scale(features);
+            }
+
+            SimpleClusters buyClusterer = new SimpleClusters(buyList, 2);
+            double[][] buyMemo = buyClusterer.run();
+
+            double[] buyConfidence = Estimator.getConfidenceScores(buyMemo);
+
+            double[] featureLabels =
+            { 0, .5, 1 };
+
+            double[] centroidLabels = Estimator.getCentroidLabels(featureLabels, buyMemo);
+
+            for (int i = 0; i < buyConfidence.length; i++) {
+                out.println("{Centroid_" + i + ": goodness of fit: " + buyConfidence[i]
+                        + " label: " + centroidLabels[i] + "}");
+            }
+
+            for (double[] features : sellList) {
+                SimpleClusters.scale(features);
+            }
+
+            SimpleClusters sellClusterer = new SimpleClusters(sellList, 1);
+            double[][] sellMemo = sellClusterer.run();
+
+            double[] sellConfidence = Estimator.getConfidenceScores(sellMemo);
+
+            for (int i = 0; i < sellConfidence.length; i++) {
+                // out.println("Sell Centroid " + i + " confidence: " +
+                // sellConfidence[i]);
             }
 
             out.println("Done");
